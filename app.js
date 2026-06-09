@@ -4,10 +4,13 @@ const panelHeading = document.getElementById('panel-heading');
 const promoTbody = document.getElementById('promotions-tbody');
 const bonusTbody = document.getElementById('bonuses-tbody');
 const bonusesEmpty = document.getElementById('bonuses-empty');
+const wageringTbody = document.getElementById('wagerings-tbody');
+const wageringsEmpty = document.getElementById('wagerings-empty');
 const triggerTbody = document.getElementById('triggers-tbody');
 const triggersEmpty = document.getElementById('triggers-empty');
 const btnAddPromo = document.getElementById('btn-add-promo');
 const btnAddBonus = document.getElementById('btn-add-bonus');
+const btnAddWagering = document.getElementById('btn-add-wagering');
 const btnAddTriggerConfig = document.getElementById('btn-add-trigger-config');
 const btnCancel = document.getElementById('btn-cancel');
 const promoNameInput = document.getElementById('promo-name');
@@ -25,9 +28,9 @@ const promoUsersCsvInput = document.getElementById('promo-users-csv-input');
 
 const sectionPromo = document.getElementById('section-promo');
 const sectionBonus = document.getElementById('section-bonus');
+const sectionWagering = document.getElementById('section-wagering');
 const sectionTrigger = document.getElementById('section-trigger');
 const sectionVip = document.getElementById('section-vip');
-const sectionPackage = document.getElementById('section-package');
 const sidebarSections = document.querySelectorAll('.nav-group__sub--nested [data-page-section]');
 const editPanel = document.getElementById('edit-panel');
 
@@ -35,43 +38,33 @@ const pageTitle = document.getElementById('page-title');
 const breadcrumbCurrent = document.getElementById('breadcrumb-current');
 const toolbarPromo = document.getElementById('toolbar-promo');
 const toolbarBonus = document.getElementById('toolbar-bonus');
+const toolbarWagering = document.getElementById('toolbar-wagering');
 const toolbarTrigger = document.getElementById('toolbar-trigger');
 const toolbarVip = document.getElementById('toolbar-vip');
-const toolbarPackage = document.getElementById('toolbar-package');
 const tablePromo = document.getElementById('table-promo');
 const tableBonus = document.getElementById('table-bonus');
+const tableWagering = document.getElementById('table-wagering');
 const tableTrigger = document.getElementById('table-trigger');
 const tableVip = document.getElementById('table-vip');
-const tablePackage = document.getElementById('table-package');
+const btnSaveWagering = document.getElementById('btn-save-wagering');
+const wageringStatusBlock = document.getElementById('wagering-status-block');
+const searchWageringInput = document.getElementById('search-wagering');
 const vipTiersTbody = document.getElementById('vip-tiers-tbody');
 const vipTiersEmpty = document.getElementById('vip-tiers-empty');
-const packagesTbody = document.getElementById('packages-tbody');
-const packagesEmpty = document.getElementById('packages-empty');
 const btnAddVipTier = document.getElementById('btn-add-vip-tier');
 const btnSaveVipTiers = document.getElementById('btn-save-vip-tiers');
-const btnAddPackage = document.getElementById('btn-add-package');
-const btnSavePackage = document.getElementById('btn-save-package');
-const vipTierEditor = document.getElementById('vip-tier-editor');
 const vipProgressionEditor = document.getElementById('vip-progression-editor');
-const packageTierEditor = document.getElementById('package-tier-editor');
-const packageNameInput = document.getElementById('package-name');
-const packageLoyaltyProgramSelect = document.getElementById('package-loyalty-program');
-const packageScheduleSelect = document.getElementById('package-schedule');
-const packageStatusEl = document.getElementById('package-status');
 const promoLoyaltyBlock = document.getElementById('promo-loyalty-block');
 const promoLoyaltyProgramSelect = document.getElementById('promo-loyalty-program');
-const promoPanelPackageNode = document.getElementById('promo-panel-package-node');
-const graphPackageSelect = document.getElementById('graph-package-select');
-const packageNodeLabelInput = document.getElementById('package-node-label');
 
 let selectedPromoRow = null;
 let selectedBonusRow = null;
+let selectedWageringRow = null;
 let selectedTriggerRow = null;
-let selectedPackageRow = null;
 let editingBonusId = null;
+let editingWageringId = null;
 let editingTriggerId = null;
 let editingPromoId = null;
-let editingPackageId = null;
 let pageSection = 'list';
 
 const PROMO_STATUS_LABELS = {
@@ -160,17 +153,15 @@ const SEED_PROMOTIONS = [
           label: 'Ставка',
           triggerId: null,
           bonusId: null,
-          packageId: null,
         },
         {
           id: 'n2',
-          type: 'reward_package',
+          type: 'bonus',
           x: 280,
           y: 120,
-          label: 'VIP weekly',
+          label: 'Кэшбэк VIP',
           triggerId: null,
           bonusId: null,
-          packageId: 1,
         },
       ],
       edges: [{ id: 'e1', from: 'n1', fromPort: 'completed', to: 'n2' }],
@@ -193,25 +184,51 @@ const SEED_VIP_TIERS = [
     id: 'bronze',
     label: 'Bronze',
     sortOrder: 1,
-    progression: { criterion: 'bet_turnover', thresholdMin: 0, currencyId: 123 },
+    progression: { criterion: 'drop', thresholdMin: 0 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: {
+      criterion: 'drop',
+      dropStep: 25000,
+      bonusId: 4,
+      scope: 'within_tier',
+    },
   },
   {
     id: 'silver',
     label: 'Silver',
     sortOrder: 2,
-    progression: { criterion: 'bet_turnover', thresholdMin: 50000, currencyId: 123 },
+    progression: { criterion: 'drop', thresholdMin: 50000 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: {
+      criterion: 'drop',
+      dropStep: 50000,
+      bonusId: 4,
+      scope: 'within_tier',
+    },
   },
   {
     id: 'gold',
     label: 'Gold',
     sortOrder: 3,
-    progression: { criterion: 'bet_turnover', thresholdMin: 200000, currencyId: 123 },
+    progression: { criterion: 'drop', thresholdMin: 200000 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: {
+      criterion: 'drop',
+      dropStep: 100000,
+      bonusId: 4,
+      scope: 'within_tier',
+    },
   },
 ];
 
 const VIP_CRITERION_LABELS = {
-  bet_turnover: 'Оборот ставок',
-  deposit_sum: 'Сумма депозитов',
+  drop: 'За дроп',
+  deposit: 'За депозит',
+};
+
+const VIP_THRESHOLD_LABELS = {
+  drop: 'Порог (сумма тавок)',
+  deposit: 'Порог (сумма депозитов)',
 };
 
 const VIP_EVAL_PERIOD_LABELS = {
@@ -226,99 +243,8 @@ const VIP_RETENTION_LABELS = {
   grace: 'С отсрочкой',
 };
 
-const SEED_REWARD_PACKAGES = [
-  {
-    id: 1,
-    name: 'VIP Club — еженедельный пакет',
-    loyaltyProgramId: 'vip_club',
-    schedule: { period: 'week' },
-    status: 'ready',
-    createdAt: '31.05.26 - 10:00:00',
-    tiers: [
-      {
-        tierId: 'bronze',
-        rewards: [
-          {
-            kind: 'cashback',
-            grantOn: 'weekly',
-            currencyId: 123,
-            percent: 5,
-            maxPayout: 200,
-            calculationPeriod: 'week',
-          },
-          { kind: 'fs', grantOn: 'weekly', currencyId: 123, amount: 10 },
-          {
-            kind: 'reload',
-            grantOn: 'deposit',
-            currencyId: 123,
-            percent: 25,
-            maxPayout: 500,
-          },
-        ],
-      },
-      {
-        tierId: 'silver',
-        rewards: [
-          {
-            kind: 'cashback',
-            grantOn: 'weekly',
-            currencyId: 123,
-            percent: 7,
-            maxPayout: 500,
-            calculationPeriod: 'week',
-          },
-          { kind: 'fs', grantOn: 'weekly', currencyId: 123, amount: 20 },
-          {
-            kind: 'reload',
-            grantOn: 'deposit',
-            currencyId: 123,
-            percent: 50,
-            maxPayout: 1000,
-          },
-        ],
-      },
-      {
-        tierId: 'gold',
-        rewards: [
-          {
-            kind: 'cashback',
-            grantOn: 'weekly',
-            currencyId: 123,
-            percent: 10,
-            maxPayout: 1000,
-            calculationPeriod: 'week',
-          },
-          { kind: 'fs', grantOn: 'weekly', currencyId: 123, amount: 50 },
-          {
-            kind: 'reload',
-            grantOn: 'deposit',
-            currencyId: 123,
-            percent: 100,
-            maxPayout: 2000,
-          },
-        ],
-      },
-    ],
-  },
-];
-
 let vipTiers = [];
 let vipProgram = { ...SEED_VIP_PROGRAM };
-let rewardPackages = [];
-let nextPackageId = 1;
-let draftPackageTiers = null;
-
-const REWARD_KIND_LABELS = {
-  cashback: 'Кэшбэк',
-  fs: 'FS',
-  reload: 'Reload',
-};
-
-const GRANT_ON_LABELS = {
-  weekly: 'Еженедельно',
-  deposit: 'При депозите',
-  immediate: 'Сразу',
-};
 
 let promoUserIds = [];
 
@@ -329,36 +255,195 @@ const BONUS_TYPE_LABELS = {
   cash: 'Денежный',
   fs: 'FS',
   fb: 'FB',
+  bonus_game: 'Бонусная игра',
   cashback: 'Кэшбэк',
   reload: 'Релоад',
   vip_club_level: 'VIP Club — уровень',
+  bonus_pack: 'Пакет бонусов',
   wheel_spin: 'Спин колеса фортуны',
+  lootbox: 'Лутбокс',
 };
 
-// --- Настройка бонусов: формула → тип → параметры ---
+const BONUS_PACK_TYPE_LABELS = {
+  wheel: 'Колесо фортуны',
+  lootbox: 'Лутбокс',
+  simple: 'Пакет бонусов',
+};
+
+// --- Настройка бонусов: тип → параметры (формула — только для денежного) ---
 
 const BONUS_FORMULA_LABELS = {
   fixed: 'Фиксированная сумма',
-  percent_deposit: '% от депозита',
-  percent_bets: '% от ставок',
+  percent: '% процент',
+  percent_deposit: '% процент',
+  percent_bets: '% процент',
 };
 
 const BONUS_FORMULA_HINTS = {
   fixed:
     'Фиксированный размер награды. В акции триггер (например, депозит) определяет, когда выдать бонус.',
-  percent_deposit:
-    'Сумма считается как процент от суммы депозита, по которому сработал триггер «Депозит».',
-  percent_bets:
-    'Сумма считается как процент от оборота ставок за период. Подходит для денежного бонуса и кэшбэка.',
+  percent:
+    'Сумма считается как процент от базы начисления. Конкретная база (депозит или ставки) задаётся триггером в акции.',
 };
 
-const BONUS_TYPES_BY_FORMULA = {
-  fixed: ['cash', 'fs', 'fb', 'cashback', 'reload', 'vip_club_level', 'wheel_spin'],
-  percent_deposit: ['cash', 'reload'],
-  percent_bets: ['cash', 'cashback'],
+function normalizeCashFormula(formula) {
+  if (formula === 'percent_deposit' || formula === 'percent_bets') return 'percent';
+  return formula || 'fixed';
+}
+
+function isPercentCashFormula(formula) {
+  return normalizeCashFormula(formula) === 'percent';
+}
+
+const CONFIGURED_BONUS_TYPES = [
+  'cash',
+  'fs',
+  'fb',
+  'bonus_game',
+  'bonus_pack',
+];
+
+const ATOMIC_BONUS_TYPES = ['cash', 'fs', 'fb', 'bonus_game'];
+
+const BONUS_GAME_CONFIG_FIELDS = ['gameId', 'roundsCount', 'expirationInHours'];
+
+const BONUS_KIND_LABELS = {
+  atomic: 'Атомарный',
+  package: 'Пакет',
 };
 
-const CONFIGURED_BONUS_TYPES = ['cash', 'fs', 'fb', 'cashback', 'reload', 'vip_club_level', 'wheel_spin'];
+function getBonusKind(bonusType) {
+  return ATOMIC_BONUS_TYPES.includes(bonusType) ? 'atomic' : 'package';
+}
+
+function isBonusPackType(bonusType) {
+  return bonusType === 'bonus_pack' || bonusType === 'wheel_spin' || bonusType === 'lootbox';
+}
+
+function getBonusPackType(bonus) {
+  if (bonus.bonusType === 'bonus_pack') return bonus.packType || 'simple';
+  if (bonus.bonusType === 'wheel_spin') return 'wheel';
+  if (bonus.bonusType === 'lootbox') return 'lootbox';
+  return null;
+}
+
+function resolveBonusTypeForPanel(bonus) {
+  if (isBonusPackType(bonus.bonusType)) return 'bonus_pack';
+  return bonus.bonusType;
+}
+
+const LOOTBOX_POOL_BONUS_TYPES = ['cash', 'fs', 'fb', 'bonus_game'];
+
+const SEED_BONUSES = [
+  {
+    id: 1,
+    bonusType: 'cash',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'Приветственный кэш',
+    currencyId: 123,
+    amount: 10,
+    freebetExpirationPediodInHours: 120,
+    type: 'sport',
+    allowedBetTypes: 'all',
+    minBetRate: 1.1,
+    maxBetRate: 100,
+    minBetRateExpress: 1.1,
+    maxBetRateExpress: 100,
+    minBetRateOrdinary: 1.1,
+    maxBetRateOrdinary: 100,
+    hasWagering: 'yes',
+    wageringId: 1,
+  },
+  {
+    id: 2,
+    bonusType: 'fs',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'Стартовые FS',
+    currencyId: 123,
+    amount: 20,
+    freebetExpirationPediodInHours: 72,
+    type: 'casino',
+    allowedBetTypes: 'all',
+    minBetRate: 0,
+    maxBetRate: 100,
+    minBetRateExpress: 0,
+    maxBetRateExpress: 100,
+    minBetRateOrdinary: 0,
+    maxBetRateOrdinary: 100,
+  },
+  {
+    id: 3,
+    bonusType: 'fb',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'Экспресс FB',
+    currencyId: 123,
+    amount: 15,
+    freebetExpirationPediodInHours: 48,
+    type: 'sport',
+    allowedBetTypes: 'express',
+    minBetRate: 1.5,
+    maxBetRate: 50,
+    minBetRateExpress: 1.5,
+    maxBetRateExpress: 50,
+    minBetRateOrdinary: 1.5,
+    maxBetRateOrdinary: 50,
+  },
+  {
+    id: 6,
+    bonusType: 'bonus_game',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'Колесо удачи',
+    gameId: 42,
+    roundsCount: 3,
+    expirationInHours: 72,
+  },
+  {
+    id: 4,
+    bonusType: 'bonus_pack',
+    packType: 'lootbox',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'VIP промежуточный кейс',
+    pool: [
+      { bonusId: 1, probability: 50 },
+      { bonusId: 2, probability: 30 },
+      { bonusId: 3, probability: 20 },
+    ],
+  },
+  {
+    id: 7,
+    bonusType: 'bonus_pack',
+    packType: 'wheel',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'Колесо фортуны',
+    pool: [
+      { bonusId: 1, probability: 40 },
+      { bonusId: 2, probability: 35 },
+      { bonusId: 3, probability: 25 },
+    ],
+  },
+  {
+    id: 5,
+    bonusType: 'bonus_pack',
+    packType: 'simple',
+    formula: 'fixed',
+    createdAt: '01.06.26 - 10:00:00',
+    status: 'ready',
+    name: 'Стартовый набор',
+    bonuses: [{ bonusId: 1 }, { bonusId: 2 }],
+  },
+];
 
 const RELOAD_CONFIG_FIELDS = ['currencyId', 'percent', 'maxPayout'];
 
@@ -383,20 +468,40 @@ const bonusTypeTabs = document.querySelectorAll('#bonus-type-tabs .bonus-type-ta
 const bonusPanels = {
   fs: document.getElementById('bonus-panel-fs'),
   fb: document.getElementById('bonus-panel-fb'),
+  bonus_game: document.getElementById('bonus-panel-bonus_game'),
   cash: document.getElementById('bonus-panel-cash'),
   cashback: document.getElementById('bonus-panel-cashback'),
   reload: document.getElementById('bonus-panel-reload'),
   vip_club_level: document.getElementById('bonus-panel-vip_club_level'),
-  wheel_spin: document.getElementById('bonus-panel-wheel_spin'),
+  bonus_pack: document.getElementById('bonus-panel-bonus_pack'),
 };
 
 const cashFields = document.querySelectorAll('.cash-field');
 const fsFields = document.querySelectorAll('.fs-field');
 const fbFields = document.querySelectorAll('.fb-field');
+const bonusGameFields = document.querySelectorAll('.bonus-game-field');
 const cashbackFields = document.querySelectorAll('.cashback-field');
 const reloadFields = document.querySelectorAll('.reload-field');
 const vipClubLevelFields = document.querySelectorAll('.vip-club-level-field');
-const wheelSpinFields = document.querySelectorAll('.wheel-spin-field');
+const bonusNameInput = document.getElementById('bonus-name');
+const bonusWageringSettings = document.getElementById('bonus-wagering-settings');
+const bonusWageringBlock = document.getElementById('bonus-wagering-block');
+const bonusWageringSelectBlock = document.getElementById('bonus-wagering-select-block');
+const bonusHasWageringSelect = document.getElementById('bonus-hasWagering');
+const bonusWageringIdSelect = document.getElementById('bonus-wageringId');
+const bonusPackFields = document.querySelectorAll('.bonus-pack-field');
+const bonusPackSubtypeTabs = document.querySelectorAll('#bonus-pack-subtype-tabs .bonus-type-tab');
+const bonusPackSubs = {
+  wheel: document.getElementById('bonus-pack-sub-wheel'),
+  lootbox: document.getElementById('bonus-pack-sub-lootbox'),
+  simple: document.getElementById('bonus-pack-sub-simple'),
+};
+const lootboxPoolEditor = document.getElementById('lootbox-pool-editor');
+const btnAddLootboxPoolRow = document.getElementById('btn-add-lootbox-pool-row');
+const wheelPoolEditor = document.getElementById('wheel-pool-editor');
+const btnAddWheelPoolRow = document.getElementById('btn-add-wheel-pool-row');
+const bonusPackSimpleEditor = document.getElementById('bonus-pack-simple-editor');
+const btnAddBonusPackSimpleRow = document.getElementById('btn-add-bonus-pack-simple-row');
 const graphBonusSelect = document.getElementById('graph-bonus-select');
 const graphBonusHint = document.getElementById('graph-bonus-hint');
 const promoPanelGeneral = document.getElementById('promo-panel-general');
@@ -418,8 +523,8 @@ const btnDeleteNode = document.getElementById('btn-delete-node');
 let bonuses = [];
 let nextBonusId = 1;
 let activeBonusType = 'cash';
+let activeBonusPackType = 'wheel';
 let activeBonusFormula = 'fixed';
-let bonusFilter = 'all';
 
 const TRIGGER_TYPE_LABELS = {
   registration: 'Регистрация',
@@ -468,6 +573,123 @@ const betFields = document.querySelectorAll('.bet-field');
 let triggers = [];
 let nextTriggerId = 1;
 let activeTriggerType = 'registration';
+
+const WAGERING_STATUS_LABELS = {
+  accepted: 'Принятые',
+  settled: 'Рассчитанные',
+};
+
+const WAGERING_CHECKBOX_FIELDS = [
+  'accountTypes',
+  'betTypes',
+  'settlementOutcomes',
+  'eventStateAtBet',
+  'betCreationPlatforms',
+  'betSources',
+];
+
+const WAGERING_DEFAULTS = {
+  name: '',
+  accountTypes: ['real'],
+  status: 'accepted',
+  betCount: null,
+  minBetAmount: null,
+  betTypes: ['any'],
+  minOdds: null,
+  maxOdds: null,
+  settlementOutcomes: ['any'],
+  considerFirstSettlementOnly: 'no',
+  considerBetRefund: 'no',
+  considerCashedOutBets: 'yes',
+  eventStateAtBet: ['any'],
+  betCreationPlatforms: ['any'],
+  betSources: ['real_balance'],
+  allowedSportsEntities: '',
+  allowedMarketsCompetitors: '',
+  sportBetMultiplier: 1,
+  sportSettlementResult: 'any',
+  casinoGameCategories: '',
+  casinoExceptionCategories: '',
+  casinoExceptionGames: '',
+  casinoBetMultiplier: 1,
+  displayInGift: 'yes',
+  wageringSteps: '1.0000',
+  winningsWageringMultiplier: null,
+  winningsWageringPeriodHours: null,
+  bonusClaimTimeLimitHours: null,
+};
+
+const SEED_WAGERINGS = [
+  {
+    id: 1,
+    name: 'Стандартная спортивная',
+    accountTypes: ['real'],
+    status: 'accepted',
+    betCount: null,
+    minBetAmount: 100,
+    betTypes: ['any'],
+    minOdds: 1.5,
+    maxOdds: null,
+    settlementOutcomes: ['any'],
+    considerFirstSettlementOnly: 'no',
+    considerBetRefund: 'no',
+    considerCashedOutBets: 'yes',
+    eventStateAtBet: ['any'],
+    betCreationPlatforms: ['any'],
+    betSources: ['real_balance'],
+    allowedSportsEntities: '',
+    allowedMarketsCompetitors: '',
+    sportBetMultiplier: 1,
+    sportSettlementResult: 'any',
+    casinoGameCategories: '',
+    casinoExceptionCategories: '',
+    casinoExceptionGames: '',
+    casinoBetMultiplier: 0,
+    displayInGift: 'yes',
+    wageringSteps: '1.0000',
+    winningsWageringMultiplier: 30,
+    winningsWageringPeriodHours: 72,
+    bonusClaimTimeLimitHours: 24,
+    createdAt: '27.03.26 - 09:08:54',
+    statusReady: 'ready',
+  },
+  {
+    id: 2,
+    name: 'Казино без краш-игр',
+    accountTypes: ['real', 'bonus'],
+    status: 'settled',
+    betCount: null,
+    minBetAmount: null,
+    betTypes: ['any'],
+    minOdds: null,
+    maxOdds: null,
+    settlementOutcomes: ['win', 'loss'],
+    considerFirstSettlementOnly: 'yes',
+    considerBetRefund: 'no',
+    considerCashedOutBets: 'no',
+    eventStateAtBet: ['any'],
+    betCreationPlatforms: ['any'],
+    betSources: ['real_balance'],
+    allowedSportsEntities: '',
+    allowedMarketsCompetitors: '',
+    sportBetMultiplier: 0,
+    sportSettlementResult: 'any',
+    casinoGameCategories: '',
+    casinoExceptionCategories: 'Allcrash, crushmainpage, crushgames',
+    casinoExceptionGames: '',
+    casinoBetMultiplier: 1,
+    displayInGift: 'yes',
+    wageringSteps: '0.5, 0.5',
+    winningsWageringMultiplier: 20,
+    winningsWageringPeriodHours: 48,
+    bonusClaimTimeLimitHours: 12,
+    createdAt: '28.03.26 - 14:22:10',
+    statusReady: 'ready',
+  },
+];
+
+let wagerings = [];
+let nextWageringId = 1;
 let triggerFilter = 'all';
 let promoInlineTriggerCreate = false;
 let attachedPromoTriggerNodeId = null;
@@ -705,8 +927,8 @@ function savePromo() {
 
 function getSelectedRow() {
   if (pageSection === 'bonus') return selectedBonusRow;
+  if (pageSection === 'wagering') return selectedWageringRow;
   if (pageSection === 'trigger') return selectedTriggerRow;
-  if (pageSection === 'package') return selectedPackageRow;
   return selectedPromoRow;
 }
 
@@ -719,13 +941,13 @@ function clearSelection() {
     selectedBonusRow.classList.remove('selected');
     selectedBonusRow = null;
   }
+  if (selectedWageringRow) {
+    selectedWageringRow.classList.remove('selected');
+    selectedWageringRow = null;
+  }
   if (selectedTriggerRow) {
     selectedTriggerRow.classList.remove('selected');
     selectedTriggerRow = null;
-  }
-  if (selectedPackageRow) {
-    selectedPackageRow.classList.remove('selected');
-    selectedPackageRow = null;
   }
 }
 
@@ -736,8 +958,8 @@ function updateEditPanelSections() {
   sectionPromo.classList.toggle('hidden', !showPromoSection);
   sectionTrigger.classList.toggle('hidden', !showTriggerSection);
   sectionBonus.classList.toggle('hidden', pageSection !== 'bonus');
+  sectionWagering?.classList.toggle('hidden', pageSection !== 'wagering');
   sectionVip.classList.toggle('hidden', pageSection !== 'vip');
-  sectionPackage.classList.toggle('hidden', pageSection !== 'package');
 }
 
 function setPromoTriggerPickerVisible(visible) {
@@ -815,7 +1037,6 @@ function showPromoNodePanel(node) {
   promoPanelGeneral.classList.toggle('hidden', !!node);
   promoPanelTrigger.classList.add('hidden');
   promoPanelBonusNode.classList.add('hidden');
-  promoPanelPackageNode?.classList.add('hidden');
   setPromoTriggerPickerVisible(true);
 
   if (!node) return;
@@ -830,11 +1051,6 @@ function showPromoNodePanel(node) {
     refreshGraphBonusSelect();
     graphBonusSelect.value = node.bonusId ? String(node.bonusId) : '';
     bonusNodeLabelInput.value = node.label || '';
-  } else if (node.type === 'reward_package') {
-    promoPanelPackageNode?.classList.remove('hidden');
-    refreshGraphPackageSelect();
-    graphPackageSelect.value = node.packageId ? String(node.packageId) : '';
-    packageNodeLabelInput.value = node.label || '';
   }
 }
 
@@ -911,16 +1127,21 @@ function openBonusPanel({ isNew, bonusId }) {
   panelHeading.textContent = isNew ? 'Добавить бонус' : `Бонус #${editingBonusId}`;
 
   if (isNew) {
+    writeBonusName('');
     CONFIGURED_BONUS_TYPES.forEach(clearBonusForm);
-    switchBonusFormula('fixed');
+    clearBonusWageringForm();
     switchBonusType('cash');
+    switchBonusFormula('fixed');
   } else {
     const bonus = bonuses.find((b) => b.id === editingBonusId);
     if (bonus) {
-      switchBonusFormula(bonus.formula || 'fixed');
-      switchBonusType(bonus.bonusType);
-      if (CONFIGURED_BONUS_TYPES.includes(bonus.bonusType)) {
-        loadBonusForm(bonus.bonusType, bonus);
+      const panelType = resolveBonusTypeForPanel(bonus);
+      switchBonusType(panelType);
+      if (bonus.bonusType === 'cash') {
+        switchBonusFormula(normalizeCashFormula(bonus.formula));
+      }
+      if (CONFIGURED_BONUS_TYPES.includes(panelType)) {
+        loadBonusForm(panelType, bonus);
       }
     }
   }
@@ -935,6 +1156,7 @@ function closePanel() {
   panelContent.classList.add('hidden');
   clearSelection();
   editingBonusId = null;
+  editingWageringId = null;
   editingTriggerId = null;
   editingPromoId = null;
 }
@@ -942,10 +1164,10 @@ function closePanel() {
 function selectPromoRow(row) {
   if (selectedBonusRow) selectedBonusRow.classList.remove('selected');
   selectedBonusRow = null;
+  if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
+  selectedWageringRow = null;
   if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
   selectedTriggerRow = null;
-  if (selectedPackageRow) selectedPackageRow.classList.remove('selected');
-  selectedPackageRow = null;
   if (selectedPromoRow) selectedPromoRow.classList.remove('selected');
   selectedPromoRow = row;
   row.classList.add('selected');
@@ -960,14 +1182,27 @@ function selectPromoRow(row) {
 function selectBonusRow(row) {
   if (selectedPromoRow) selectedPromoRow.classList.remove('selected');
   selectedPromoRow = null;
+  if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
+  selectedWageringRow = null;
   if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
   selectedTriggerRow = null;
-  if (selectedPackageRow) selectedPackageRow.classList.remove('selected');
-  selectedPackageRow = null;
   if (selectedBonusRow) selectedBonusRow.classList.remove('selected');
   selectedBonusRow = row;
   row.classList.add('selected');
   openBonusPanel({ isNew: false, bonusId: Number(row.dataset.id) });
+}
+
+function selectWageringRow(row) {
+  if (selectedPromoRow) selectedPromoRow.classList.remove('selected');
+  selectedPromoRow = null;
+  if (selectedBonusRow) selectedBonusRow.classList.remove('selected');
+  selectedBonusRow = null;
+  if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
+  selectedTriggerRow = null;
+  if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
+  selectedWageringRow = row;
+  row.classList.add('selected');
+  openWageringPanel({ isNew: false, wageringId: Number(row.dataset.id) });
 }
 
 function selectTriggerRow(row) {
@@ -975,46 +1210,43 @@ function selectTriggerRow(row) {
   selectedPromoRow = null;
   if (selectedBonusRow) selectedBonusRow.classList.remove('selected');
   selectedBonusRow = null;
-  if (selectedPackageRow) selectedPackageRow.classList.remove('selected');
-  selectedPackageRow = null;
+  if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
+  selectedWageringRow = null;
   if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
   selectedTriggerRow = row;
   row.classList.add('selected');
   openTriggerPanel({ isNew: false, triggerId: Number(row.dataset.id) });
 }
 
-function selectPackageRow(row) {
-  if (selectedPromoRow) selectedPromoRow.classList.remove('selected');
-  selectedPromoRow = null;
-  if (selectedBonusRow) selectedBonusRow.classList.remove('selected');
-  selectedBonusRow = null;
-  if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
-  selectedTriggerRow = null;
-  if (selectedPackageRow) selectedPackageRow.classList.remove('selected');
-  selectedPackageRow = row;
-  row.classList.add('selected');
-  openPackagePanel({ isNew: false, packageId: Number(row.dataset.id) });
-}
-
 function getSortedVipTiers() {
   return [...vipTiers].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+}
+
+function normalizeVipCriterion(criterion) {
+  if (criterion === 'bet_turnover') return 'drop';
+  if (criterion === 'deposit_sum') return 'deposit';
+  return criterion === 'deposit' ? 'deposit' : 'drop';
+}
+
+function getVipThresholdLabel(criterion) {
+  return VIP_THRESHOLD_LABELS[normalizeVipCriterion(criterion)] || VIP_THRESHOLD_LABELS.drop;
 }
 
 function defaultProgressionForTier(sortOrder) {
   const thresholds = { 1: 0, 2: 50000, 3: 200000 };
   return {
-    criterion: 'bet_turnover',
+    criterion: 'drop',
     thresholdMin: thresholds[sortOrder] ?? 0,
-    currencyId: 123,
   };
 }
 
 function formatProgressionSummary(tier) {
   const p = tier.progression;
   if (!p) return '—';
-  const crit = VIP_CRITERION_LABELS[p.criterion] || p.criterion;
+  const criterion = normalizeVipCriterion(p.criterion);
+  const crit = VIP_CRITERION_LABELS[criterion] || criterion;
   const threshold = p.thresholdMin != null ? p.thresholdMin.toLocaleString('ru-RU') : '—';
-  return `${crit} ≥ ${threshold}`;
+  return `${crit}: от ${threshold}`;
 }
 
 function loadVipProgramForm() {
@@ -1025,11 +1257,93 @@ function loadVipProgramForm() {
   };
 }
 
+function defaultStepRewardAccrual() {
+  return {
+    criterion: 'drop',
+    dropStep: 25000,
+    bonusId: null,
+    scope: 'within_tier',
+  };
+}
+
+function normalizeStepRewardAccrual(acc) {
+  if (!acc) return defaultStepRewardAccrual();
+  return {
+    criterion: acc.criterion || 'drop',
+    dropStep: acc.dropStep ?? 25000,
+    bonusId: acc.bonusId ?? acc.lootboxBonusId ?? null,
+    scope: acc.scope || 'within_tier',
+  };
+}
+
+function readStepRewardAccrualFromBlock(block) {
+  const dropStep = Number(block.querySelector('[data-pf="stepRewardDropStep"]')?.value) || 0;
+  const bonusRaw = block.querySelector('[data-pf="stepRewardBonusId"]')?.value;
+  return {
+    criterion: 'drop',
+    dropStep,
+    bonusId: bonusRaw ? Number(bonusRaw) : null,
+    scope: 'within_tier',
+  };
+}
+
 function readVipProgramForm() {
   return {
     ...vipProgram,
     recalculation: 'rolling',
   };
+}
+
+function getStepRewardSelectableBonuses() {
+  return getReadyConfiguredBonuses().filter((b) => b.bonusType !== 'vip_club_level');
+}
+
+function buildStepRewardBonusSelectOptions(selectedId) {
+  const ready = getStepRewardSelectableBonuses();
+  const options = [];
+
+  if (ready.length === 0) {
+    options.push('<option value="">Сначала настройте бонус</option>');
+    return options.join('');
+  }
+
+  options.push(`<option value="">${selectedId ? 'Не выбран' : 'Выберите награду'}</option>`);
+  ready.forEach((bonus) => {
+    const selected = bonus.id === selectedId ? ' selected' : '';
+    options.push(`<option value="${bonus.id}"${selected}>${formatBonusLabel(bonus)}</option>`);
+  });
+
+  if (selectedId && !ready.some((b) => b.id === selectedId)) {
+    const stale = bonuses.find((b) => b.id === selectedId);
+    const label = stale ? `${formatBonusLabel(stale)} (недоступен)` : `Бонус #${selectedId} (недоступен)`;
+    options.push(`<option value="${selectedId}" selected>${label}</option>`);
+  }
+
+  return options.join('');
+}
+
+function refreshVipStepRewardBonusSelects() {
+  if (!vipProgressionEditor) return;
+  const ready = getStepRewardSelectableBonuses();
+  vipProgressionEditor.querySelectorAll('[data-pf="stepRewardBonusId"]').forEach((select) => {
+    const current = select.value ? Number(select.value) : null;
+    select.innerHTML = buildStepRewardBonusSelectOptions(current);
+    select.disabled = ready.length === 0;
+    if (current) select.value = String(current);
+  });
+}
+
+function isVipStepRewardAccrualComplete(acc) {
+  const normalized = normalizeStepRewardAccrual(acc);
+  if (!Number.isFinite(normalized.dropStep) || normalized.dropStep < 1) return false;
+  if (!normalized.bonusId) return false;
+  const bonus = bonuses.find((b) => b.id === normalized.bonusId);
+  return Boolean(
+    bonus &&
+    bonus.bonusType !== 'vip_club_level' &&
+    CONFIGURED_BONUS_TYPES.includes(bonus.bonusType) &&
+    bonus.status === 'ready'
+  );
 }
 
 function renderVipTiersTable() {
@@ -1042,7 +1356,9 @@ function renderVipTiersTable() {
     const tr = document.createElement('tr');
     tr.dataset.id = tier.id;
     const p = tier.progression;
-    const critLabel = p ? VIP_CRITERION_LABELS[p.criterion] || p.criterion : '—';
+    const critLabel = p
+      ? VIP_CRITERION_LABELS[normalizeVipCriterion(p.criterion)] || p.criterion
+      : '—';
     const threshold =
       p?.thresholdMin != null ? p.thresholdMin.toLocaleString('ru-RU') : '—';
     tr.innerHTML = `
@@ -1050,45 +1366,31 @@ function renderVipTiersTable() {
       <td>${tier.label}</td>
       <td>${critLabel}</td>
       <td>${threshold}</td>
+      <td>${formatLvlUpBonusSummary(tier.lvlUpBonusId)}</td>
       <td><button class="icon-btn icon-btn--sm" type="button" title="Редактировать">✎</button></td>
     `;
     vipTiersTbody.appendChild(tr);
   });
 }
 
-function renderVipTierEditor() {
-  if (!vipTierEditor) return;
-  const tiers = getSortedVipTiers();
-  vipTierEditor.innerHTML = tiers
-    .map(
-      (tier, index) => `
-    <div class="vip-tier-row" data-index="${index}">
-      <div>
-        <label class="form-label">ID</label>
-        <input class="form-input vip-tier-id" type="text" value="${tier.id}" data-field="id" />
-      </div>
-      <div>
-        <label class="form-label">Название</label>
-        <input class="form-input vip-tier-label" type="text" value="${tier.label}" data-field="label" />
-      </div>
-      <button class="btn btn--ghost btn--sm vip-tier-remove" type="button" title="Удалить">×</button>
-    </div>`
-    )
-    .join('');
-}
-
-function readVipTiersFromEditor() {
-  if (!vipTierEditor) return [];
-  const prevById = new Map(vipTiers.map((t) => [t.id, t]));
-  return [...vipTierEditor.querySelectorAll('.vip-tier-row')].map((row, index) => {
-    const id = row.querySelector('.vip-tier-id')?.value.trim() || `tier_${index + 1}`;
-    const prev = prevById.get(id) || vipTiers[index];
+function readVipTiersFromProgressionEditor() {
+  if (!vipProgressionEditor) return [];
+  return [...vipProgressionEditor.querySelectorAll('.vip-progression-block')].map((block, index) => {
+    const id = block.dataset.tierId || `tier_${index + 1}`;
     const sortOrder = index + 1;
+    const lvlUpRaw = block.querySelector('[data-pf="lvlUpBonusId"]')?.value;
     return {
       id,
-      label: row.querySelector('.vip-tier-label')?.value.trim() || `Tier ${index + 1}`,
+      label: block.querySelector('[data-pf="label"]')?.value.trim() || `Tier ${sortOrder}`,
       sortOrder,
-      progression: prev?.progression || defaultProgressionForTier(sortOrder),
+      progression: {
+        criterion: normalizeVipCriterion(
+          block.querySelector('[data-pf="criterion"]')?.value || 'drop'
+        ),
+        thresholdMin: Number(block.querySelector('[data-pf="thresholdMin"]')?.value) || 0,
+      },
+      lvlUpBonusId: lvlUpRaw ? Number(lvlUpRaw) : null,
+      stepRewardAccrual: readStepRewardAccrualFromBlock(block),
     };
   });
 }
@@ -1098,29 +1400,65 @@ function renderVipProgressionEditor() {
   const tiers = getSortedVipTiers();
 
   vipProgressionEditor.innerHTML = tiers
-    .map((tier) => {
+    .map((tier, index) => {
       const p = tier.progression || defaultProgressionForTier(tier.sortOrder);
+      const criterion = normalizeVipCriterion(p.criterion);
       const opts = Object.entries(VIP_CRITERION_LABELS)
         .map(
           ([val, label]) =>
-            `<option value="${val}" ${p.criterion === val ? 'selected' : ''}>${label}</option>`
+            `<option value="${val}" ${criterion === val ? 'selected' : ''}>${label}</option>`
         )
         .join('');
+      const lvlUpOpts = buildLvlUpBonusSelectOptions(tier.lvlUpBonusId ?? null);
+      const lvlUpDisabled = getLvlUpSelectableBonuses().length === 0 ? ' disabled' : '';
+      const acc = normalizeStepRewardAccrual(tier.stepRewardAccrual || tier.lootboxAccrual);
+      const stepRewardOpts = buildStepRewardBonusSelectOptions(acc.bonusId ?? null);
+      const stepRewardDisabled = getStepRewardSelectableBonuses().length === 0 ? ' disabled' : '';
       return `
-        <div class="vip-progression-block" data-tier-id="${tier.id}">
-          <div class="vip-progression-block__title">${tier.label} <code>${tier.id}</code></div>
+        <div class="vip-progression-block" data-tier-id="${tier.id}" data-index="${index}">
+          <div class="vip-progression-block__header">
+            <div class="vip-progression-block__name">
+              <label class="form-label">Название</label>
+              <input class="form-input" type="text" data-pf="label" value="${tier.label}" placeholder="Gold" />
+            </div>
+            <button class="btn btn--ghost btn--sm vip-tier-remove" type="button" title="Удалить">×</button>
+          </div>
           <div class="vip-progression-block__fields">
             <div>
               <label class="form-label">Критерий</label>
               <select class="form-select" data-pf="criterion">${opts}</select>
             </div>
             <div>
-              <label class="form-label">Мин. порог за период</label>
-              <input class="form-input" type="number" data-pf="thresholdMin" value="${p.thresholdMin ?? 0}" min="0" />
+              <label class="form-label" data-pf="thresholdLabel">${getVipThresholdLabel(criterion)}</label>
+              <input class="form-input" type="number" data-pf="thresholdMin" value="${p.thresholdMin ?? 0}" min="0" step="1" />
             </div>
-            <div>
-              <label class="form-label">currencyId</label>
-              <input class="form-input" type="number" data-pf="currencyId" value="${p.currencyId ?? 123}" />
+            <div class="vip-progression-block__lvl-up">
+              <label class="form-label">LVL-up бонус</label>
+              <select class="form-select" data-pf="lvlUpBonusId"${lvlUpDisabled}>${lvlUpOpts}</select>
+              <p class="form-hint vip-progression-block__lvl-up-hint">Бонус за достижение уровня. Доступны сохранённые бонусы из раздела «Настройка бонуса».</p>
+            </div>
+            <div class="vip-progression-block__step-reward">
+              <p class="vip-progression-block__step-reward-title">Награды между уровнями</p>
+              <div class="vip-progression-block__step-reward-fields">
+                <div>
+                  <label class="form-label">Шаг дропа ($)</label>
+                  <input
+                    class="form-input"
+                    type="number"
+                    data-pf="stepRewardDropStep"
+                    value="${acc.dropStep ?? ''}"
+                    min="1"
+                    step="1"
+                    placeholder="25000"
+                  />
+                  <p class="form-hint">За каждые X$ дропа в сегменте текущего уровня — 1 награда.</p>
+                </div>
+                <div>
+                  <label class="form-label">Шаблон награды</label>
+                  <select class="form-select" data-pf="stepRewardBonusId"${stepRewardDisabled}>${stepRewardOpts}</select>
+                  <p class="form-hint">Ссылка на сохранённый бонус из раздела «Настройка бонуса».</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>`;
@@ -1128,32 +1466,28 @@ function renderVipProgressionEditor() {
     .join('');
 }
 
-function applyVipProgressionFromEditor() {
-  if (!vipProgressionEditor) return;
-  vipProgressionEditor.querySelectorAll('.vip-progression-block').forEach((block) => {
-    const tierId = block.dataset.tierId;
-    const tier = vipTiers.find((t) => t.id === tierId);
-    if (!tier) return;
-    tier.progression = {
-      criterion: block.querySelector('[data-pf="criterion"]')?.value || 'bet_turnover',
-      thresholdMin: Number(block.querySelector('[data-pf="thresholdMin"]')?.value) || 0,
-      currencyId: Number(block.querySelector('[data-pf="currencyId"]')?.value) || 123,
-    };
-  });
-}
-
 function saveVipTiers() {
-  vipTiers = readVipTiersFromEditor();
-  applyVipProgressionFromEditor();
+  const tiers = readVipTiersFromProgressionEditor();
+  const incompleteTier = tiers.find((tier) => !isVipStepRewardAccrualComplete(tier.stepRewardAccrual));
+  if (incompleteTier) {
+    return;
+  }
+  vipTiers = tiers;
   vipProgram = readVipProgramForm();
   renderVipTiersTable();
-  renderVipTierEditor();
   renderVipProgressionEditor();
   loadVipProgramForm();
-  if (pageSection === 'package' && draftPackageTiers) {
-    syncPackageTiersWithVip();
-    renderPackageTierEditor();
-  }
+}
+
+function refreshVipLvlUpBonusSelects() {
+  if (!vipProgressionEditor) return;
+  const ready = getLvlUpSelectableBonuses();
+  vipProgressionEditor.querySelectorAll('[data-pf="lvlUpBonusId"]').forEach((select) => {
+    const current = select.value ? Number(select.value) : null;
+    select.innerHTML = buildLvlUpBonusSelectOptions(current);
+    select.disabled = ready.length === 0;
+    if (current) select.value = String(current);
+  });
 }
 
 function addVipTierRow() {
@@ -1163,264 +1497,11 @@ function addVipTierRow() {
     label: `Tier ${next}`,
     sortOrder: next,
     progression: defaultProgressionForTier(next),
+    lvlUpBonusId: null,
+    stepRewardAccrual: defaultStepRewardAccrual(),
   });
-  renderVipTierEditor();
   renderVipProgressionEditor();
-  refreshVipDefaultTierOptions();
   renderVipTiersTable();
-}
-
-function clonePackageTiersFromVip(existingTiers = []) {
-  const byTierId = new Map((existingTiers || []).map((t) => [t.tierId, t]));
-  return getSortedVipTiers().map((tier) => {
-    const prev = byTierId.get(tier.id);
-    return { tierId: tier.id, rewards: prev ? [...prev.rewards] : [] };
-  });
-}
-
-function syncPackageTiersWithVip() {
-  if (!draftPackageTiers) return;
-  draftPackageTiers = clonePackageTiersFromVip(draftPackageTiers);
-}
-
-function createEmptyReward(kind) {
-  const base = { kind, grantOn: kind === 'reload' ? 'deposit' : 'weekly', currencyId: 123 };
-  if (kind === 'cashback') {
-    return { ...base, percent: 5, maxPayout: 200, calculationPeriod: 'week' };
-  }
-  if (kind === 'fs') return { ...base, amount: 10 };
-  return { ...base, percent: 25, maxPayout: 500 };
-}
-
-function rewardRowHtml(tierIndex, rewardIndex, reward) {
-  const kind = reward.kind || 'cashback';
-  const grantOptions = Object.entries(GRANT_ON_LABELS)
-    .map(
-      ([val, label]) =>
-        `<option value="${val}" ${reward.grantOn === val ? 'selected' : ''}>${label}</option>`
-    )
-    .join('');
-
-  let fields = '';
-  if (kind === 'cashback') {
-    fields = `
-      <div><label>Процент %</label><input type="number" data-rf="percent" value="${reward.percent ?? ''}" step="0.1" /></div>
-      <div><label>Макс. выплата</label><input type="number" data-rf="maxPayout" value="${reward.maxPayout ?? ''}" /></div>
-      <div class="package-reward-row__full"><label>Период расчёта</label>
-        <select data-rf="calculationPeriod">
-          <option value="day" ${reward.calculationPeriod === 'day' ? 'selected' : ''}>День</option>
-          <option value="week" ${reward.calculationPeriod === 'week' ? 'selected' : ''}>Неделя</option>
-          <option value="month" ${reward.calculationPeriod === 'month' ? 'selected' : ''}>Месяц</option>
-        </select>
-      </div>`;
-  } else if (kind === 'fs') {
-    fields = `<div><label>Количество FS</label><input type="number" data-rf="amount" value="${reward.amount ?? ''}" /></div>`;
-  } else {
-    fields = `
-      <div><label>Процент %</label><input type="number" data-rf="percent" value="${reward.percent ?? ''}" step="0.1" /></div>
-      <div><label>Макс. выплата</label><input type="number" data-rf="maxPayout" value="${reward.maxPayout ?? ''}" /></div>`;
-  }
-
-  const kindOptions = Object.entries(REWARD_KIND_LABELS)
-    .map(
-      ([val, label]) => `<option value="${val}" ${kind === val ? 'selected' : ''}>${label}</option>`
-    )
-    .join('');
-
-  return `
-    <div class="package-reward-row" data-tier="${tierIndex}" data-reward="${rewardIndex}">
-      <button class="btn btn--ghost package-reward-row__remove package-reward-remove" type="button">×</button>
-      <div><label>Тип награды</label><select data-rf="kind" class="package-reward-kind">${kindOptions}</select></div>
-      <div><label>Когда выдать</label><select data-rf="grantOn">${grantOptions}</select></div>
-      <div><label>currencyId</label><input type="number" data-rf="currencyId" value="${reward.currencyId ?? ''}" /></div>
-      ${fields}
-    </div>`;
-}
-
-function renderPackageTierEditor() {
-  if (!packageTierEditor || !draftPackageTiers) return;
-  const tiersMeta = getSortedVipTiers();
-
-  packageTierEditor.innerHTML = draftPackageTiers
-    .map((tierBlock, tierIndex) => {
-      const meta = tiersMeta.find((t) => t.id === tierBlock.tierId);
-      const title = meta ? `${meta.label} (${tierBlock.tierId})` : tierBlock.tierId;
-      const rewardsHtml = (tierBlock.rewards || [])
-        .map((r, ri) => rewardRowHtml(tierIndex, ri, r))
-        .join('');
-      return `
-        <div class="package-tier-block" data-tier-index="${tierIndex}">
-          <div class="package-tier-block__head">
-            <span>${title}</span>
-            <button class="btn btn--ghost btn--sm package-add-reward" type="button" data-tier="${tierIndex}">+ Награда</button>
-          </div>
-          <div class="package-tier-block__body">${rewardsHtml || '<p class="form-hint">Нет наград для уровня</p>'}</div>
-        </div>`;
-    })
-    .join('');
-
-  updatePackageUI();
-}
-
-function readRewardFromRow(row) {
-  const reward = { kind: row.querySelector('[data-rf="kind"]')?.value || 'cashback' };
-  row.querySelectorAll('[data-rf]').forEach((el) => {
-    const key = el.dataset.rf;
-    if (key === 'kind') return;
-    const val = el.value.trim();
-    if (!val) return;
-    if (['currencyId', 'percent', 'maxPayout', 'amount'].includes(key)) {
-      reward[key] = Number(val);
-    } else {
-      reward[key] = val;
-    }
-  });
-  return reward;
-}
-
-function readPackageTiersFromEditor() {
-  if (!packageTierEditor || !draftPackageTiers) return [];
-  return draftPackageTiers.map((tierBlock, tierIndex) => {
-    const block = packageTierEditor.querySelector(`[data-tier-index="${tierIndex}"]`);
-    const rewards = block
-      ? [...block.querySelectorAll('.package-reward-row')].map(readRewardFromRow)
-      : [];
-    return { tierId: tierBlock.tierId, rewards };
-  });
-}
-
-function isPackageComplete() {
-  const name = packageNameInput?.value.trim();
-  if (!name) return false;
-  const tiers = packageTierEditor?.querySelector('.package-tier-block')
-    ? readPackageTiersFromEditor()
-    : draftPackageTiers || [];
-  if (!tiers.length) return false;
-  return tiers.every((tier) => {
-    if (!tier.rewards?.length) return false;
-    return tier.rewards.every((r) => {
-      if (!r.currencyId) return false;
-      if (r.kind === 'fs') return r.amount > 0;
-      return r.percent > 0;
-    });
-  });
-}
-
-function updatePackageUI() {
-  const complete = isPackageComplete();
-  packageStatusEl?.classList.toggle('bonus-status--ready', complete);
-  const dot = packageStatusEl?.querySelector('.bonus-status__dot');
-  dot?.classList.toggle('bonus-status__dot--complete', complete);
-  dot?.classList.toggle('bonus-status__dot--incomplete', !complete);
-  const text = packageStatusEl?.querySelector('.bonus-status__text');
-  if (text) {
-    text.textContent = complete
-      ? 'Пакет готов — можно сохранить'
-      : 'Добавьте награды для каждого уровня VIP';
-  }
-  if (btnSavePackage) btnSavePackage.disabled = !complete;
-}
-
-function countPackageRewards(pkg) {
-  return (pkg.tiers || []).reduce((n, t) => n + (t.rewards?.length || 0), 0);
-}
-
-function formatPackageLabel(pkg) {
-  const n = countPackageRewards(pkg);
-  return `${pkg.name} — ${n} наград · ${pkg.schedule?.period || 'week'}`;
-}
-
-function getReadyRewardPackages() {
-  return rewardPackages.filter((p) => p.status === 'ready');
-}
-
-function renderPackagesTable() {
-  if (!packagesTbody) return;
-  packagesTbody.innerHTML = '';
-  packagesEmpty?.classList.toggle('hidden', rewardPackages.length > 0);
-
-  rewardPackages.forEach((pkg) => {
-    const tr = document.createElement('tr');
-    tr.dataset.id = String(pkg.id);
-    tr.innerHTML = `
-      <td>${pkg.id}</td>
-      <td>${pkg.name}</td>
-      <td>${pkg.loyaltyProgramId || '—'}</td>
-      <td>${countPackageRewards(pkg)}</td>
-      <td><span class="status ${pkg.status === 'ready' ? 'status--active' : 'status--draft'}">${pkg.status === 'ready' ? 'Ready' : 'Draft'}</span></td>
-      <td><button class="icon-btn icon-btn--sm" type="button" title="Копировать">📋</button></td>
-    `;
-    if (selectedPackageRow?.dataset.id === String(pkg.id)) tr.classList.add('selected');
-    packagesTbody.appendChild(tr);
-  });
-}
-
-function openPackagePanel({ isNew, packageId }) {
-  editingPackageId = isNew ? null : packageId ?? null;
-  panelEmpty.classList.add('hidden');
-  panelContent.classList.remove('hidden');
-  panelHeading.textContent = isNew ? 'Добавить пакет' : `Пакет #${editingPackageId}`;
-
-  if (isNew) {
-    packageNameInput.value = '';
-    packageLoyaltyProgramSelect.value = 'vip_club';
-    packageScheduleSelect.value = 'week';
-    draftPackageTiers = clonePackageTiersFromVip([]);
-  } else {
-    const pkg = rewardPackages.find((p) => p.id === editingPackageId);
-    if (!pkg) return;
-    packageNameInput.value = pkg.name || '';
-    packageLoyaltyProgramSelect.value = pkg.loyaltyProgramId || 'vip_club';
-    packageScheduleSelect.value = pkg.schedule?.period || 'week';
-    draftPackageTiers = clonePackageTiersFromVip(pkg.tiers || []);
-  }
-  renderPackageTierEditor();
-}
-
-function savePackage() {
-  if (!isPackageComplete()) return;
-  const tiers = readPackageTiersFromEditor();
-  const payload = {
-    name: packageNameInput.value.trim(),
-    loyaltyProgramId: packageLoyaltyProgramSelect.value,
-    schedule: { period: packageScheduleSelect.value },
-    tiers,
-    status: 'ready',
-  };
-
-  if (editingPackageId) {
-    const idx = rewardPackages.findIndex((p) => p.id === editingPackageId);
-    if (idx === -1) return;
-    rewardPackages[idx] = {
-      ...rewardPackages[idx],
-      ...payload,
-    };
-  } else {
-    const pkg = {
-      id: nextPackageId++,
-      createdAt: formatDate(),
-      ...payload,
-    };
-    rewardPackages.push(pkg);
-    editingPackageId = pkg.id;
-    panelHeading.textContent = `Пакет #${pkg.id}`;
-  }
-
-  renderPackagesTable();
-  refreshGraphPackageSelect();
-  GraphEditor.refreshPackageNodes();
-  updatePackageUI();
-}
-
-function refreshGraphPackageSelect() {
-  if (!graphPackageSelect) return;
-  const ready = getReadyRewardPackages();
-  graphPackageSelect.disabled = ready.length === 0;
-  graphPackageSelect.innerHTML =
-    ready.length === 0
-      ? '<option value="">Сначала создайте пакет</option>'
-      : '<option value="">Выберите пакет</option>' +
-        ready.map((p) => `<option value="${p.id}">${formatPackageLabel(p)}</option>`).join('');
 }
 
 function openVipPanel() {
@@ -1428,7 +1509,6 @@ function openVipPanel() {
   panelContent.classList.remove('hidden');
   panelHeading.textContent = 'VIP Club';
   loadVipProgramForm();
-  renderVipTierEditor();
   renderVipProgressionEditor();
 }
 
@@ -1442,10 +1522,10 @@ function switchPageSection(section) {
 
   pageSection = section;
   const isBonus = section === 'bonus';
+  const isWagering = section === 'wagering';
   const isTrigger = section === 'trigger';
   const isVip = section === 'vip';
-  const isPackage = section === 'package';
-  const isConfig = isBonus || isTrigger || isVip || isPackage;
+  const isConfig = isBonus || isWagering || isTrigger || isVip;
   const isList = section === 'list';
 
   sidebarSections.forEach((link) => {
@@ -1454,23 +1534,23 @@ function switchPageSection(section) {
 
   const titles = {
     bonus: 'Бонусы',
+    wagering: 'Настройки обкатки',
     trigger: 'Триггеры',
     vip: 'VIP Club',
-    package: 'Пакеты наград',
   };
   pageTitle.textContent = titles[section] || 'Акции';
   breadcrumbCurrent.textContent = titles[section] || 'Акции';
 
   toolbarPromo.classList.toggle('hidden', isConfig);
   toolbarBonus.classList.toggle('hidden', !isBonus);
+  toolbarWagering?.classList.toggle('hidden', !isWagering);
   toolbarTrigger.classList.toggle('hidden', !isTrigger);
   toolbarVip?.classList.toggle('hidden', !isVip);
-  toolbarPackage?.classList.toggle('hidden', !isPackage);
   tablePromo.classList.toggle('hidden', isConfig);
   tableBonus.classList.toggle('hidden', !isBonus);
+  tableWagering?.classList.toggle('hidden', !isWagering);
   tableTrigger.classList.toggle('hidden', !isTrigger);
   tableVip?.classList.toggle('hidden', !isVip);
-  tablePackage?.classList.toggle('hidden', !isPackage);
 
   editPanel.classList.toggle('hidden', isList);
   updateEditPanelSections();
@@ -1493,11 +1573,6 @@ function switchPageSection(section) {
     selectedPromoRow = null;
     editingPromoId = null;
   }
-  if (isConfig && selectedPackageRow) {
-    selectedPackageRow.classList.remove('selected');
-    selectedPackageRow = null;
-    editingPackageId = null;
-  }
   if (section === 'promo' && selectedBonusRow) {
     selectedBonusRow.classList.remove('selected');
     selectedBonusRow = null;
@@ -1513,25 +1588,39 @@ function switchPageSection(section) {
     selectedTriggerRow = null;
     editingTriggerId = null;
   }
+  if (isBonus && selectedWageringRow) {
+    selectedWageringRow.classList.remove('selected');
+    selectedWageringRow = null;
+    editingWageringId = null;
+  }
+  if (isWagering && selectedBonusRow) {
+    selectedBonusRow.classList.remove('selected');
+    selectedBonusRow = null;
+    editingBonusId = null;
+  }
+  if (isWagering && selectedTriggerRow) {
+    selectedTriggerRow.classList.remove('selected');
+    selectedTriggerRow = null;
+    editingTriggerId = null;
+  }
   if (isTrigger && selectedBonusRow) {
     selectedBonusRow.classList.remove('selected');
     selectedBonusRow = null;
     editingBonusId = null;
   }
-  if ((isBonus || isTrigger || isVip) && selectedPackageRow) {
-    selectedPackageRow.classList.remove('selected');
-    selectedPackageRow = null;
-    editingPackageId = null;
+  if (isTrigger && selectedWageringRow) {
+    selectedWageringRow.classList.remove('selected');
+    selectedWageringRow = null;
+    editingWageringId = null;
   }
-
   if (isBonus) renderBonusesTable();
+  if (isWagering) renderWageringsTable();
   if (isTrigger) renderTriggersTable();
   if (isVip) {
     renderVipTiersTable();
     openVipPanel();
     return;
   }
-  if (isPackage) renderPackagesTable();
 
   const row = getSelectedRow();
   if (row) {
@@ -1539,10 +1628,10 @@ function switchPageSection(section) {
     panelContent.classList.remove('hidden');
     if (isBonus) {
       openBonusPanel({ isNew: false, bonusId: Number(row.dataset.id) });
+    } else if (isWagering) {
+      openWageringPanel({ isNew: false, wageringId: Number(row.dataset.id) });
     } else if (isTrigger) {
       openTriggerPanel({ isNew: false, triggerId: Number(row.dataset.id) });
-    } else if (isPackage) {
-      openPackagePanel({ isNew: false, packageId: Number(row.dataset.id) });
     } else {
       openPromoPanel({
         title: 'Редактирование акции',
@@ -1551,10 +1640,6 @@ function switchPageSection(section) {
         promoId: Number(row.dataset.id),
       });
     }
-  } else if (section === 'package') {
-    panelEmpty.classList.remove('hidden');
-    panelContent.classList.add('hidden');
-    editingPackageId = null;
   } else if (section === 'promo') {
     panelEmpty.classList.add('hidden');
     panelContent.classList.remove('hidden');
@@ -1571,45 +1656,248 @@ function switchPageSection(section) {
     panelEmpty.classList.remove('hidden');
     panelContent.classList.add('hidden');
     editingBonusId = null;
+    editingWageringId = null;
     editingTriggerId = null;
   }
 }
 
-function getAllowedBonusTypes(formula = activeBonusFormula) {
-  return BONUS_TYPES_BY_FORMULA[formula] || BONUS_TYPES_BY_FORMULA.fixed;
-}
-
 function switchBonusFormula(formula) {
-  activeBonusFormula = formula;
+  activeBonusFormula = normalizeCashFormula(formula);
   bonusFormulaTabs.forEach((tab) => {
     tab.classList.toggle('bonus-formula-tab--active', tab.dataset.bonusFormula === formula);
   });
   if (bonusFormulaHint) {
     bonusFormulaHint.textContent = BONUS_FORMULA_HINTS[formula] || '';
   }
+  updateCashFormulaFields();
+  updateBonusUI();
+}
 
-  const allowed = getAllowedBonusTypes(formula);
-  bonusTypeTabs.forEach((tab) => {
-    const type = tab.dataset.bonusType;
-    tab.classList.toggle('is-disabled', !allowed.includes(type));
+function getLootboxPoolSelectableBonuses() {
+  return getReadyConfiguredBonuses().filter((b) => LOOTBOX_POOL_BONUS_TYPES.includes(b.bonusType));
+}
+
+function buildLootboxPoolSelectOptions(selectedId) {
+  const ready = getLootboxPoolSelectableBonuses();
+  const options = [];
+
+  if (ready.length === 0) {
+    options.push('<option value="">Сначала настройте FS / FB / бонусную игру / денежный</option>');
+    return options.join('');
+  }
+
+  options.push(`<option value="">${selectedId ? 'Не выбран' : 'Выберите бонус'}</option>`);
+  ready.forEach((bonus) => {
+    const selected = bonus.id === selectedId ? ' selected' : '';
+    options.push(`<option value="${bonus.id}"${selected}>${formatBonusLabel(bonus)}</option>`);
   });
 
-  if (!allowed.includes(activeBonusType)) {
-    const fallback = allowed.find((t) => CONFIGURED_BONUS_TYPES.includes(t)) || allowed[0];
-    if (fallback) switchBonusType(fallback);
-  } else {
-    updateCashFormulaFields();
-    updateBonusUI();
+  if (selectedId && !ready.some((b) => b.id === selectedId)) {
+    const stale = bonuses.find((b) => b.id === selectedId);
+    const label = stale ? `${formatBonusLabel(stale)} (недоступен)` : `Бонус #${selectedId} (недоступен)`;
+    options.push(`<option value="${selectedId}" selected>${label}</option>`);
   }
+
+  return options.join('');
+}
+
+function normalizeLootboxPool(pool) {
+  if (!Array.isArray(pool) || pool.length === 0) return [];
+  const hasProbability = pool.some((entry) => entry?.probability != null && entry.probability !== '');
+  if (hasProbability) {
+    return pool.map((entry) => ({
+      bonusId: entry.bonusId ?? null,
+      probability: entry.probability !== undefined && entry.probability !== null ? entry.probability : '',
+    }));
+  }
+  const totalWeight = pool.reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0);
+  if (totalWeight <= 0) {
+    return pool.map((entry) => ({ bonusId: entry.bonusId ?? null, probability: '' }));
+  }
+  return pool.map((entry) => ({
+    bonusId: entry.bonusId ?? null,
+    probability: Math.round(((Number(entry?.weight) || 0) / totalWeight) * 10000) / 100,
+  }));
+}
+
+function readBonusPoolDraftFromEditor(editorEl) {
+  if (!editorEl) return [];
+  return [...editorEl.querySelectorAll('.lootbox-pool-row')].map((row) => {
+    const bonusRaw = row.querySelector('[data-pool="bonusId"]')?.value;
+    const probabilityRaw = row.querySelector('[data-pool="probability"]')?.value;
+    return {
+      bonusId: bonusRaw ? Number(bonusRaw) : null,
+      probability: probabilityRaw ?? '',
+    };
+  });
+}
+
+function readBonusPoolFromEditor(editorEl) {
+  return readBonusPoolDraftFromEditor(editorEl)
+    .map((entry) => ({
+      bonusId: entry.bonusId,
+      probability: Number(entry.probability) || 0,
+    }))
+    .filter((entry) => entry.bonusId && entry.probability > 0);
+}
+
+function readLootboxPoolFromEditor() {
+  return readBonusPoolFromEditor(lootboxPoolEditor);
+}
+
+function readWheelPoolFromEditor() {
+  return readBonusPoolFromEditor(wheelPoolEditor);
+}
+
+function renderBonusPoolEditor(editorEl, pool = []) {
+  if (!editorEl) return;
+  const normalized = normalizeLootboxPool(pool);
+  const rows = normalized.length ? normalized : [{ bonusId: null, probability: '' }];
+  const selectable = getLootboxPoolSelectableBonuses();
+
+  editorEl.innerHTML = rows
+    .map((entry) => {
+      const opts = buildLootboxPoolSelectOptions(entry.bonusId ?? null);
+      const disabled = selectable.length === 0 ? ' disabled' : '';
+      const probabilityVal =
+        entry.probability !== undefined && entry.probability !== null ? entry.probability : '';
+      return `
+        <div class="lootbox-pool-row">
+          <select class="form-select" data-pool="bonusId"${disabled}>${opts}</select>
+          <div class="lootbox-pool-probability">
+            <input class="form-input" type="number" data-pool="probability" min="0.01" max="100" step="0.01" value="${probabilityVal}" placeholder="0" />
+            <span class="lootbox-pool-probability__suffix">%</span>
+          </div>
+          <button class="lootbox-pool-remove" type="button" title="Удалить">×</button>
+        </div>`;
+    })
+    .join('');
+
+  editorEl.querySelectorAll('[data-pool="bonusId"], [data-pool="probability"]').forEach((el) => {
+    el.addEventListener('input', updateBonusUI);
+    el.addEventListener('change', updateBonusUI);
+  });
+}
+
+function renderLootboxPoolEditor(pool = []) {
+  renderBonusPoolEditor(lootboxPoolEditor, pool);
+}
+
+function renderWheelPoolEditor(pool = []) {
+  renderBonusPoolEditor(wheelPoolEditor, pool);
+}
+
+function getLootboxPoolProbabilityTotal(pool) {
+  if (!Array.isArray(pool)) return 0;
+  return pool.reduce((sum, entry) => sum + (Number(entry?.probability) || 0), 0);
+}
+
+function isValidBonusPool(pool) {
+  if (!Array.isArray(pool) || pool.length === 0) return false;
+  const allowedIds = new Set(getLootboxPoolSelectableBonuses().map((b) => b.id));
+  const entriesValid = pool.every(
+    (entry) =>
+      entry &&
+      allowedIds.has(entry.bonusId) &&
+      Number.isFinite(entry.probability) &&
+      entry.probability > 0 &&
+      entry.probability <= 100
+  );
+  if (!entriesValid) return false;
+  return Math.abs(getLootboxPoolProbabilityTotal(pool) - 100) <= 0.01;
+}
+
+function isValidLootboxPool(pool) {
+  return isValidBonusPool(pool);
+}
+
+function readBonusPackSimpleFromEditor() {
+  if (!bonusPackSimpleEditor) return [];
+  return [...bonusPackSimpleEditor.querySelectorAll('.bonus-pack-simple-row')]
+    .map((row) => {
+      const bonusRaw = row.querySelector('[data-pack-simple="bonusId"]')?.value;
+      return bonusRaw ? { bonusId: Number(bonusRaw) } : null;
+    })
+    .filter((entry) => entry && entry.bonusId);
+}
+
+function renderBonusPackSimpleEditor(bonuses = []) {
+  if (!bonusPackSimpleEditor) return;
+  const rows = bonuses.length ? bonuses : [{ bonusId: null }];
+  const selectable = getLootboxPoolSelectableBonuses();
+
+  bonusPackSimpleEditor.innerHTML = rows
+    .map((entry) => {
+      const opts = buildLootboxPoolSelectOptions(entry.bonusId ?? null);
+      const disabled = selectable.length === 0 ? ' disabled' : '';
+      return `
+        <div class="bonus-pack-simple-row">
+          <select class="form-select" data-pack-simple="bonusId"${disabled}>${opts}</select>
+          <button class="lootbox-pool-remove" type="button" title="Удалить">×</button>
+        </div>`;
+    })
+    .join('');
+}
+
+function isValidBonusPackSimple(bonuses) {
+  if (!Array.isArray(bonuses) || bonuses.length === 0) return false;
+  const allowedIds = new Set(getLootboxPoolSelectableBonuses().map((b) => b.id));
+  return bonuses.every((entry) => entry && allowedIds.has(entry.bonusId));
+}
+
+function readBonusName() {
+  return bonusNameInput?.value.trim() ?? '';
+}
+
+function writeBonusName(value) {
+  if (bonusNameInput) bonusNameInput.value = value ?? '';
+}
+
+function getBonusPackFormData() {
+  const data = {
+    packType: activeBonusPackType,
+    name: readBonusName(),
+  };
+  bonusPackFields.forEach((el) => {
+    const key = el.dataset.field;
+    if (!key) return;
+    if (el.type === 'checkbox') {
+      data[key] = el.checked;
+    } else {
+      data[key] = el.value.trim();
+    }
+  });
+  data.pool =
+    activeBonusPackType === 'wheel'
+      ? readWheelPoolFromEditor()
+      : activeBonusPackType === 'lootbox'
+        ? readLootboxPoolFromEditor()
+        : [];
+  data.bonuses = readBonusPackSimpleFromEditor();
+  return data;
+}
+
+function switchBonusPackSubtype(packType) {
+  activeBonusPackType = packType;
+  bonusPackSubtypeTabs.forEach((tab) => {
+    tab.classList.toggle('bonus-type-tab--active', tab.dataset.packType === packType);
+  });
+  Object.entries(bonusPackSubs).forEach(([key, panel]) => {
+    panel?.classList.toggle('hidden', key !== packType);
+  });
+  if (packType === 'wheel' && wheelPoolEditor && !wheelPoolEditor.children.length) {
+    renderWheelPoolEditor([]);
+  }
+  if (packType === 'lootbox' && lootboxPoolEditor && !lootboxPoolEditor.children.length) {
+    renderLootboxPoolEditor([]);
+  }
+  if (packType === 'simple' && bonusPackSimpleEditor && !bonusPackSimpleEditor.children.length) {
+    renderBonusPackSimpleEditor([]);
+  }
+  updateBonusUI();
 }
 
 function switchBonusType(type) {
-  if (!getAllowedBonusTypes().includes(type)) return;
-
-  if (type === 'reload' && activeBonusFormula !== 'percent_deposit') {
-    switchBonusFormula('percent_deposit');
-  }
-
   activeBonusType = type;
   bonusTypeTabs.forEach((tab) => {
     tab.classList.toggle('bonus-type-tab--active', tab.dataset.bonusType === type);
@@ -1617,13 +1905,15 @@ function switchBonusType(type) {
   Object.entries(bonusPanels).forEach(([key, panel]) => {
     panel?.classList.toggle('hidden', key !== type);
   });
+  if (type === 'bonus_pack') {
+    switchBonusPackSubtype(activeBonusPackType);
+  }
   updateCashFormulaFields();
   updateBonusUI();
 }
 
 function updateCashFormulaFields() {
-  const isPercent =
-    activeBonusFormula === 'percent_deposit' || activeBonusFormula === 'percent_bets';
+  const isPercent = isPercentCashFormula(activeBonusFormula);
   document.querySelectorAll('.cash-formula-field--fixed').forEach((el) => {
     el.classList.toggle('hidden', isPercent);
   });
@@ -1643,11 +1933,20 @@ function getCashConfigFields() {
 }
 
 function getBonusConfigFields(type) {
+  const fields = getBonusTypeConfigFields(type);
+  return ['name', ...fields];
+}
+
+function getBonusTypeConfigFields(type) {
   if (type === 'cash') return getCashConfigFields();
   if (type === 'cashback') return CASHBACK_CONFIG_FIELDS;
   if (type === 'reload') return RELOAD_CONFIG_FIELDS;
-  if (type === 'vip_club_level') return ['name'];
-  if (type === 'wheel_spin') return ['spinsCount', 'spinBonusesJson'];
+  if (type === 'vip_club_level') return [];
+  if (type === 'bonus_pack') {
+    if (activeBonusPackType === 'wheel') return ['pool'];
+    if (activeBonusPackType === 'lootbox') return ['pool'];
+    if (activeBonusPackType === 'simple') return ['bonuses'];
+  }
   if (type === 'fs' || type === 'fb') {
     return [
       'currencyId',
@@ -1663,6 +1962,7 @@ function getBonusConfigFields(type) {
       'maxBetRateOrdinary',
     ];
   }
+  if (type === 'bonus_game') return BONUS_GAME_CONFIG_FIELDS;
   return [];
 }
 
@@ -1670,10 +1970,11 @@ function getBonusFields(type) {
   if (type === 'cash') return cashFields;
   if (type === 'fs') return fsFields;
   if (type === 'fb') return fbFields;
+  if (type === 'bonus_game') return bonusGameFields;
   if (type === 'cashback') return cashbackFields;
   if (type === 'reload') return reloadFields;
   if (type === 'vip_club_level') return vipClubLevelFields;
-  if (type === 'wheel_spin') return wheelSpinFields;
+  if (type === 'bonus_pack') return bonusPackFields;
   return [];
 }
 
@@ -1685,79 +1986,301 @@ function getBonusSaveBtn(type) {
   return document.getElementById(`btn-save-${type}-bonus`);
 }
 
+function getSelectableWagerings() {
+  return wagerings.filter((w) => w.statusReady === 'ready');
+}
+
+function formatWageringLabel(wagering) {
+  return `#${wagering.id} · ${wagering.name}`;
+}
+
+function buildBonusWageringSelectOptions(selectedId) {
+  const ready = getSelectableWagerings();
+  const options = [];
+
+  if (ready.length === 0) {
+    options.push('<option value="">Сначала создайте обкатку</option>');
+    return options.join('');
+  }
+
+  options.push(`<option value="">${selectedId ? 'Не выбрана' : 'Выберите обкатку'}</option>`);
+
+  ready.forEach((wagering) => {
+    const selected = wagering.id === selectedId ? ' selected' : '';
+    options.push(`<option value="${wagering.id}"${selected}>${formatWageringLabel(wagering)}</option>`);
+  });
+
+  if (selectedId && !ready.some((w) => w.id === selectedId)) {
+    const stale = wagerings.find((w) => w.id === selectedId);
+    const label = stale
+      ? `${formatWageringLabel(stale)} (недоступна)`
+      : `Обкатка #${selectedId} (недоступна)`;
+    options.push(`<option value="${selectedId}" selected>${label}</option>`);
+  }
+
+  return options.join('');
+}
+
+function refreshBonusWageringSelect(selectedId = null) {
+  if (!bonusWageringIdSelect) return;
+  const current = selectedId ?? (bonusWageringIdSelect.value ? Number(bonusWageringIdSelect.value) : null);
+  bonusWageringIdSelect.innerHTML = buildBonusWageringSelectOptions(current);
+}
+
+function readBonusWageringFromForm() {
+  const hasWagering = bonusHasWageringSelect?.value === 'yes' ? 'yes' : 'no';
+  const raw = bonusWageringIdSelect?.value;
+  return {
+    hasWagering,
+    wageringId: hasWagering === 'yes' && raw ? Number(raw) : null,
+  };
+}
+
+function clearBonusWageringForm() {
+  if (bonusHasWageringSelect) bonusHasWageringSelect.value = 'no';
+  refreshBonusWageringSelect(null);
+  updateBonusWageringFields();
+}
+
+function loadBonusWageringForm(bonus) {
+  const hasWagering = bonus?.hasWagering === 'yes' ? 'yes' : 'no';
+  if (bonusHasWageringSelect) bonusHasWageringSelect.value = hasWagering;
+  refreshBonusWageringSelect(bonus?.wageringId ?? null);
+  updateBonusWageringFields();
+}
+
+function placeBonusWageringSettings() {
+  if (!bonusWageringSettings) return;
+  const panel = bonusPanels[activeBonusType];
+  if (!panel) return;
+  const statusEl = panel.querySelector('.bonus-status');
+  if (statusEl) {
+    panel.insertBefore(bonusWageringSettings, statusEl);
+  } else {
+    panel.appendChild(bonusWageringSettings);
+  }
+}
+
+function updateBonusWageringFields() {
+  const isAtomic = ATOMIC_BONUS_TYPES.includes(activeBonusType);
+  const hasWagering = bonusHasWageringSelect?.value === 'yes';
+  if (isAtomic) {
+    placeBonusWageringSettings();
+    bonusWageringSettings?.classList.remove('hidden');
+  } else {
+    bonusWageringSettings?.classList.add('hidden');
+  }
+  bonusWageringSelectBlock?.classList.toggle('hidden', !hasWagering);
+  if (bonusWageringIdSelect) {
+    bonusWageringIdSelect.disabled = getSelectableWagerings().length === 0;
+  }
+}
+
+function isValidBonusWagering(data) {
+  if (data.hasWagering !== 'yes') return true;
+  if (!data.wageringId) return false;
+  return getSelectableWagerings().some((w) => w.id === data.wageringId);
+}
+
+function getBonusWageringStatusHint(data) {
+  if (data.hasWagering !== 'yes') return null;
+  if (!data.wageringId) return 'Выберите обкатку из списка';
+  if (!getSelectableWagerings().some((w) => w.id === data.wageringId)) {
+    return 'Выбранная обкатка недоступна — выберите другую';
+  }
+  return null;
+}
+
+function attachBonusWageringFields(bonus, data) {
+  const hasWagering = data.hasWagering === 'yes' ? 'yes' : 'no';
+  bonus.hasWagering = hasWagering;
+  bonus.wageringId = hasWagering === 'yes' && data.wageringId ? Number(data.wageringId) : null;
+  return bonus;
+}
+
 function clearBonusForm(type) {
   getBonusFields(type).forEach((el) => {
-    el.value = '';
+    if (el.type === 'checkbox') {
+      el.checked = false;
+    } else {
+      el.value = '';
+    }
   });
+  if (type === 'bonus_pack') {
+    switchBonusPackSubtype('wheel');
+    renderWheelPoolEditor([]);
+    renderLootboxPoolEditor([]);
+    renderBonusPackSimpleEditor([]);
+  }
 }
 
 function loadBonusForm(type, bonus) {
+  writeBonusName(bonus.name ?? '');
+
+  if (type === 'bonus_pack') {
+    const packType = getBonusPackType(bonus) || 'wheel';
+    switchBonusPackSubtype(packType);
+
+    getBonusFields(type).forEach((el) => {
+      const key = el.dataset.field;
+      if (!key) return;
+      if (el.type === 'checkbox') {
+        el.checked = bonus[key] !== false;
+      } else if (bonus[key] !== undefined) {
+        el.value = bonus[key];
+      }
+    });
+
+    if (packType === 'wheel') {
+      renderWheelPoolEditor(bonus.pool || []);
+    } else if (packType === 'lootbox') {
+      renderLootboxPoolEditor(bonus.pool || []);
+    } else if (packType === 'simple') {
+      renderBonusPackSimpleEditor(bonus.bonuses || []);
+    }
+    return;
+  }
+
   getBonusFields(type).forEach((el) => {
     const key = el.dataset.field;
     if (bonus[key] !== undefined) el.value = bonus[key];
   });
+
+  if (ATOMIC_BONUS_TYPES.includes(type)) {
+    loadBonusWageringForm(bonus);
+  }
 }
 
 function getBonusFormData(type) {
-  const data = {};
+  if (type === 'bonus_pack') return getBonusPackFormData();
+
+  const data = { name: readBonusName() };
   getBonusFields(type).forEach((el) => {
     data[el.dataset.field] = el.value.trim();
   });
+  if (ATOMIC_BONUS_TYPES.includes(type)) {
+    Object.assign(data, readBonusWageringFromForm());
+  }
   return data;
 }
 
-function isBonusConfigComplete(type, data = getBonusFormData(type)) {
-  if (type === 'wheel_spin') {
-    const spins = Number(data.spinsCount);
-    if (!Number.isFinite(spins) || spins < 1) return false;
-    const raw = String(data.spinBonusesJson ?? '').trim();
-    if (!raw) return false;
-    try {
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed) || parsed.length === 0) return false;
-      return parsed.every((x) => x && typeof x === 'object' && typeof x.kind === 'string' && x.kind.trim());
-    } catch {
-      return false;
+function getBonusPackStatusHint(data = getBonusPackFormData()) {
+  const packType = data.packType || activeBonusPackType;
+  if (!String(data.name ?? readBonusName()).trim()) return 'Укажите название бонуса';
+
+  if (packType === 'wheel') {
+    const pool = Array.isArray(data.pool) ? data.pool : [];
+    if (!pool.length) return 'Добавьте сектор: выберите бонус и укажите вероятность';
+    const allowedIds = new Set(getLootboxPoolSelectableBonuses().map((b) => b.id));
+    if (pool.some((entry) => !allowedIds.has(entry.bonusId))) {
+      return 'В пуле есть недоступный бонус — выберите другой';
     }
+    const total = getLootboxPoolProbabilityTotal(pool);
+    if (Math.abs(total - 100) > 0.01) {
+      return `Сумма вероятностей: ${total}% — нужно 100%`;
+    }
+    return null;
   }
 
-  const fields = getBonusConfigFields(type);
+  if (packType === 'lootbox') {
+    const pool = Array.isArray(data.pool) ? data.pool : [];
+    if (!pool.length) return 'Добавьте награду: выберите бонус и укажите вероятность';
+    const total = getLootboxPoolProbabilityTotal(pool);
+    if (!isValidLootboxPool(pool)) {
+      if (Math.abs(total - 100) > 0.01) {
+        return `Сумма вероятностей: ${total}% — нужно 100%`;
+      }
+      return 'Заполните все строки пула корректными бонусами и вероятностями';
+    }
+    return null;
+  }
+
+  if (packType === 'simple') {
+    if (!isValidBonusPackSimple(data.bonuses)) return 'Добавьте хотя бы один готовый бонус в пакет';
+    return null;
+  }
+
+  return 'Заполните все поля пакета бонусов';
+}
+
+function isBonusConfigComplete(type, data = getBonusFormData(type)) {
+  if (!String(data.name ?? readBonusName()).trim()) return false;
+
+  if (type === 'bonus_pack') {
+    const packType = data.packType || activeBonusPackType;
+    if (packType === 'wheel') {
+      return isValidBonusPool(data.pool);
+    }
+    if (packType === 'lootbox') {
+      return isValidLootboxPool(data.pool);
+    }
+    if (packType === 'simple') {
+      return isValidBonusPackSimple(data.bonuses);
+    }
+    return false;
+  }
+
+  const fields = getBonusTypeConfigFields(type);
   return fields.every((key) => {
     const val = data[key];
     if (key === 'maxPayout' && (val === '' || val === undefined)) return true;
     if (val === '' || val === undefined) return false;
     if (
-      ['currencyId', 'amount', 'percent', 'maxPayout', 'freebetExpirationPediodInHours'].includes(
-        key
-      )
+      [
+        'currencyId',
+        'amount',
+        'percent',
+        'maxPayout',
+        'freebetExpirationPediodInHours',
+        'gameId',
+        'roundsCount',
+        'expirationInHours',
+      ].includes(key)
     ) {
+      if (key === 'roundsCount') {
+        return !Number.isNaN(Number(val)) && Number(val) >= 1;
+      }
       return !Number.isNaN(Number(val)) && Number(val) >= 0;
     }
     if (key.startsWith('min') || key.startsWith('max')) {
       return !Number.isNaN(Number(val));
     }
     return true;
-  });
+  }) && isValidBonusWagering(data);
 }
 
 function buildBonusFromForm(type, data, id, createdAt) {
-  if (type === 'wheel_spin') {
-    const rawJson = String(data.spinBonusesJson ?? '').trim();
-    let spinBonuses = [];
-    try {
-      spinBonuses = JSON.parse(rawJson || '[]');
-    } catch {
-      spinBonuses = [];
-    }
-    return {
+  if (type === 'bonus_pack') {
+    const packType = data.packType || activeBonusPackType;
+    const base = {
       id,
-      bonusType: 'wheel_spin',
+      bonusType: 'bonus_pack',
+      packType,
       formula: 'fixed',
       createdAt: createdAt || formatDate(),
       status: 'ready',
-      spinsCount: Number(data.spinsCount),
-      spinBonusesJson: rawJson ? JSON.stringify(spinBonuses, null, 2) : '',
-      spinBonuses,
+    };
+
+    if (packType === 'wheel') {
+      return {
+        ...base,
+        name: data.name,
+        pool: Array.isArray(data.pool) ? data.pool : readWheelPoolFromEditor(),
+      };
+    }
+
+    if (packType === 'lootbox') {
+      return {
+        ...base,
+        name: data.name,
+        pool: Array.isArray(data.pool) ? data.pool : readLootboxPoolFromEditor(),
+      };
+    }
+
+    return {
+      ...base,
+      name: data.name,
+      bonuses: Array.isArray(data.bonuses) ? data.bonuses : readBonusPackSimpleFromEditor(),
     };
   }
 
@@ -1779,6 +2302,7 @@ function buildBonusFromForm(type, data, id, createdAt) {
       formula: 'percent_bets',
       createdAt: createdAt || formatDate(),
       status: 'ready',
+      name: data.name,
       currencyId: Number(data.currencyId),
       percent: Number(data.percent),
       calculationPeriod: data.calculationPeriod,
@@ -1794,6 +2318,7 @@ function buildBonusFromForm(type, data, id, createdAt) {
       formula: 'percent_deposit',
       createdAt: createdAt || formatDate(),
       status: 'ready',
+      name: data.name,
       currencyId: Number(data.currencyId),
       percent: Number(data.percent),
     };
@@ -1801,13 +2326,31 @@ function buildBonusFromForm(type, data, id, createdAt) {
     return bonus;
   }
 
-  const formula = type === 'cash' ? activeBonusFormula : 'fixed';
+  if (type === 'bonus_game') {
+    return attachBonusWageringFields(
+      {
+        id,
+        bonusType: 'bonus_game',
+        formula: 'fixed',
+        createdAt: createdAt || formatDate(),
+        status: 'ready',
+        name: data.name,
+        gameId: Number(data.gameId),
+        roundsCount: Number(data.roundsCount),
+        expirationInHours: Number(data.expirationInHours),
+      },
+      data
+    );
+  }
+
+  const formula = type === 'cash' ? normalizeCashFormula(activeBonusFormula) : 'fixed';
   const bonus = {
     id,
     bonusType: type,
     formula,
     createdAt: createdAt || formatDate(),
     status: 'ready',
+    name: data.name,
     currencyId: Number(data.currencyId),
     freebetExpirationPediodInHours: Number(data.freebetExpirationPediodInHours),
     type: data.type,
@@ -1830,11 +2373,13 @@ function buildBonusFromForm(type, data, id, createdAt) {
     bonus.maxPayout = Number(data.maxPayout);
   }
 
-  return bonus;
+  return attachBonusWageringFields(bonus, data);
 }
 
 function updateBonusUI() {
   if (!CONFIGURED_BONUS_TYPES.includes(activeBonusType)) return;
+
+  updateBonusWageringFields();
 
   const type = activeBonusType;
   const complete = isBonusConfigComplete(type);
@@ -1848,9 +2393,12 @@ function updateBonusUI() {
   statusEl.classList.toggle('bonus-status--ready', complete);
   statusDot.classList.toggle('bonus-status__dot--complete', complete);
   statusDot.classList.toggle('bonus-status__dot--incomplete', !complete);
+  const packHint = type === 'bonus_pack' && !complete ? getBonusPackStatusHint() : null;
+  const wageringHint =
+    ATOMIC_BONUS_TYPES.includes(type) && !complete ? getBonusWageringStatusHint(getBonusFormData(type)) : null;
   statusText.textContent = complete
     ? 'Все параметры заполнены — можно сохранить'
-    : 'Не готов к добавлению в акцию';
+    : packHint || wageringHint || 'Не готов к добавлению в акцию';
 
   saveBtn.disabled = !complete;
   saveBtn.textContent = editingBonusId ? 'Обновить настройки бонуса' : 'Сохранить настройки бонуса';
@@ -1858,12 +2406,26 @@ function updateBonusUI() {
 
 function formatBonusSize(bonus) {
   if (bonus.bonusType === 'vip_club_level') return bonus.name || '—';
-  if (bonus.bonusType === 'wheel_spin') {
-    const spins = bonus.spinsCount != null ? bonus.spinsCount : '—';
-    const n = Array.isArray(bonus.spinBonuses) ? bonus.spinBonuses.length : 0;
-    return `${spins} спин(ов) · ${n} наград`;
+
+  const packType = getBonusPackType(bonus);
+  if (packType) {
+    const subtypeLabel = BONUS_PACK_TYPE_LABELS[packType] || packType;
+    if (packType === 'lootbox') {
+      const n = Array.isArray(bonus.pool) ? bonus.pool.length : 0;
+      const totalProbability = getLootboxPoolProbabilityTotal(normalizeLootboxPool(bonus.pool || []));
+      return `${subtypeLabel}: ${n} наград · ${totalProbability}%`;
+    }
+    if (packType === 'wheel') {
+      const n = Array.isArray(bonus.pool) ? bonus.pool.length : 0;
+      const totalProbability = getLootboxPoolProbabilityTotal(normalizeLootboxPool(bonus.pool || []));
+      return `${subtypeLabel}: ${n} наград · ${totalProbability}%`;
+    }
+    if (packType === 'simple') {
+      const n = Array.isArray(bonus.bonuses) ? bonus.bonuses.length : 0;
+      return `${subtypeLabel}: ${n} бонус(ов)`;
+    }
   }
-  if (bonus.formula === 'percent_deposit' || bonus.formula === 'percent_bets') {
+  if (isPercentCashFormula(bonus.formula)) {
     const pct = bonus.percent ?? '—';
     const cap = bonus.maxPayout != null ? `, макс. ${bonus.maxPayout}` : '';
     return `${pct}%${cap}`;
@@ -1876,6 +2438,11 @@ function formatBonusSize(bonus) {
     const cap = bonus.maxPayout != null ? `, макс. ${bonus.maxPayout}` : '';
     return `${bonus.percent}%${cap}`;
   }
+  if (bonus.bonusType === 'bonus_game') {
+    const rounds = bonus.roundsCount ?? '—';
+    const game = bonus.gameId ?? '—';
+    return `игра ${game} · ${rounds} раунд(ов)`;
+  }
   return bonus.amount ?? '—';
 }
 
@@ -1884,20 +2451,65 @@ function formatBonusLabel(bonus) {
     return `VIP Club уровень #${bonus.id} — ${bonus.name || '—'}`;
   }
   const typeLabel = BONUS_TYPE_LABELS[bonus.bonusType] || bonus.bonusType;
-  const formulaLabel = bonus.formula ? BONUS_FORMULA_LABELS[bonus.formula] : '';
+  const namePart = bonus.name ? ` «${bonus.name}»` : '';
+  const formulaLabel =
+    bonus.bonusType === 'cash' && bonus.formula ? BONUS_FORMULA_LABELS[bonus.formula] : '';
   const size = formatBonusSize(bonus);
   const formulaPart = formulaLabel ? ` · ${formulaLabel}` : '';
   const currencyPart =
-    bonus.bonusType === 'vip_club_level' || bonus.bonusType === 'wheel_spin'
+    bonus.bonusType === 'vip_club_level' ||
+    bonus.bonusType === 'bonus_game' ||
+    isBonusPackType(bonus.bonusType)
       ? ''
       : ` (валюта ${bonus.currencyId})`;
-  return `${typeLabel} #${bonus.id} — ${size}${currencyPart}${formulaPart}`;
+  return `${typeLabel} #${bonus.id}${namePart} — ${size}${currencyPart}${formulaPart}`;
+}
+
+function isConfiguredBonusType(bonusType) {
+  return CONFIGURED_BONUS_TYPES.includes(bonusType) || bonusType === 'wheel_spin' || bonusType === 'lootbox';
 }
 
 function getReadyConfiguredBonuses() {
-  return bonuses.filter(
-    (b) => CONFIGURED_BONUS_TYPES.includes(b.bonusType) && b.status === 'ready'
+  return bonuses.filter((b) => isConfiguredBonusType(b.bonusType) && b.status === 'ready');
+}
+
+function getLvlUpSelectableBonuses() {
+  return getReadyConfiguredBonuses().filter(
+    (b) => b.bonusType !== 'vip_club_level' && getBonusPackType(b) !== 'lootbox'
   );
+}
+
+function formatLvlUpBonusSummary(bonusId) {
+  if (!bonusId) return '—';
+  const bonus = bonuses.find((b) => b.id === bonusId);
+  return bonus ? formatBonusLabel(bonus) : `Бонус #${bonusId}`;
+}
+
+function buildLvlUpBonusSelectOptions(selectedId) {
+  const ready = getLvlUpSelectableBonuses();
+  const options = [];
+
+  if (ready.length === 0) {
+    options.push('<option value="">Сначала настройте бонус</option>');
+    return options.join('');
+  }
+
+  options.push(`<option value="">${selectedId ? 'Не выбран' : 'Выберите бонус'}</option>`);
+
+  ready.forEach((bonus) => {
+    const selected = bonus.id === selectedId ? ' selected' : '';
+    options.push(
+      `<option value="${bonus.id}"${selected}>${formatBonusLabel(bonus)}</option>`
+    );
+  });
+
+  if (selectedId && !ready.some((b) => b.id === selectedId)) {
+    const stale = bonuses.find((b) => b.id === selectedId);
+    const label = stale ? `${formatBonusLabel(stale)} (недоступен)` : `Бонус #${selectedId} (недоступен)`;
+    options.push(`<option value="${selectedId}" selected>${label}</option>`);
+  }
+
+  return options.join('');
 }
 
 function switchTriggerType(type) {
@@ -2192,7 +2804,7 @@ function refreshGraphBonusSelect() {
     );
     if (graphBonusHint) {
       graphBonusHint.textContent =
-        'Доступны только сохранённые и полностью заполненные бонусы (денежный, FS, FB, кэшбэк, релоад, VIP Club, колесо фортуны).';
+        'Доступны только сохранённые и полностью заполненные бонусы (денежный, FS, FB, колесо фортуны, лутбокс).';
     }
     return;
   }
@@ -2221,42 +2833,303 @@ function refreshGraphBonusSelect() {
   }
 }
 
-function passesBonusFilter(bonus) {
-  if (bonusFilter === 'all') return true;
-  if (bonusFilter === 'ready') return bonus.status === 'ready';
-  if (bonusFilter === 'draft') return bonus.status === 'draft';
-  return bonus.bonusType === bonusFilter;
+function readWageringCheckboxGroup(field) {
+  const group = sectionWagering?.querySelector(`[data-wagering-checkbox="${field}"]`);
+  if (!group) return [];
+  return [...group.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)')].map(
+    (input) => input.value
+  );
+}
+
+function setWageringCheckboxGroup(field, values = []) {
+  const group = sectionWagering?.querySelector(`[data-wagering-checkbox="${field}"]`);
+  if (!group) return;
+  const normalized = Array.isArray(values) ? values : [];
+  group.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach((input) => {
+    input.checked = normalized.includes(input.value);
+  });
+}
+
+function parseWageringSteps(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return ['1.0000'];
+  if (text.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((v) => String(v));
+      }
+    } catch {
+      return null;
+    }
+  }
+  return text.split(/[,;]+/).map((part) => part.trim()).filter(Boolean);
+}
+
+function isValidWageringSteps(raw) {
+  const steps = parseWageringSteps(raw);
+  if (!steps || steps.length === 0) return false;
+  const sum = steps.reduce((acc, step) => acc + Number(step), 0);
+  return Number.isFinite(sum) && Math.abs(sum - 1) < 0.0001;
+}
+
+function getWageringFormData() {
+  const data = { ...WAGERING_DEFAULTS };
+  sectionWagering?.querySelectorAll('[data-wagering-field]').forEach((el) => {
+    const key = el.dataset.wageringField;
+    if (!key) return;
+    if (el.type === 'number') {
+      data[key] = el.value === '' ? null : Number(el.value);
+      return;
+    }
+    data[key] = el.value;
+  });
+  WAGERING_CHECKBOX_FIELDS.forEach((field) => {
+    data[field] = readWageringCheckboxGroup(field);
+  });
+  return data;
+}
+
+function clearWageringForm() {
+  sectionWagering?.querySelectorAll('[data-wagering-field]').forEach((el) => {
+    const key = el.dataset.wageringField;
+    if (!key) return;
+    const def = WAGERING_DEFAULTS[key];
+    if (el.type === 'number') {
+      el.value = def == null ? '' : String(def);
+      return;
+    }
+    el.value = def == null ? '' : String(def);
+  });
+  WAGERING_CHECKBOX_FIELDS.forEach((field) => {
+    setWageringCheckboxGroup(field, WAGERING_DEFAULTS[field]);
+  });
+  updateWageringConditionalFields();
+}
+
+function loadWageringForm(wagering) {
+  if (!wagering) return;
+  sectionWagering?.querySelectorAll('[data-wagering-field]').forEach((el) => {
+    const key = el.dataset.wageringField;
+    if (!key || !(key in wagering)) return;
+    const value = wagering[key];
+    if (el.type === 'number') {
+      el.value = value == null || value === '' ? '' : String(value);
+      return;
+    }
+    el.value = value == null ? '' : String(value);
+  });
+  WAGERING_CHECKBOX_FIELDS.forEach((field) => {
+    setWageringCheckboxGroup(field, wagering[field] || WAGERING_DEFAULTS[field]);
+  });
+  updateWageringConditionalFields();
+}
+
+function updateWageringConditionalFields() {
+  const status = sectionWagering?.querySelector('[data-wagering-field="status"]')?.value || 'accepted';
+  const isSettled = status === 'settled';
+  sectionWagering?.querySelectorAll('.wagering-field--settled-only').forEach((el) => {
+    el.classList.toggle('hidden', !isSettled);
+  });
+}
+
+function isWageringConfigComplete() {
+  const data = getWageringFormData();
+  if (!data.name?.trim()) return false;
+  if (!isValidWageringSteps(data.wageringSteps)) return false;
+  if (data.minOdds != null && data.maxOdds != null && data.minOdds > data.maxOdds) return false;
+  return true;
+}
+
+function buildWageringFromForm(data, id, createdAt) {
+  return {
+    id,
+    name: data.name.trim(),
+    accountTypes: data.accountTypes?.length ? data.accountTypes : ['real'],
+    status: data.status || 'accepted',
+    betCount: data.betCount,
+    minBetAmount: data.minBetAmount,
+    betTypes: data.betTypes?.length ? data.betTypes : ['any'],
+    minOdds: data.minOdds,
+    maxOdds: data.maxOdds,
+    settlementOutcomes: data.settlementOutcomes?.length ? data.settlementOutcomes : ['any'],
+    considerFirstSettlementOnly: data.considerFirstSettlementOnly || 'no',
+    considerBetRefund: data.considerBetRefund || 'no',
+    considerCashedOutBets: data.considerCashedOutBets || 'yes',
+    eventStateAtBet: data.eventStateAtBet?.length ? data.eventStateAtBet : ['any'],
+    betCreationPlatforms: data.betCreationPlatforms?.length ? data.betCreationPlatforms : ['any'],
+    betSources: data.betSources?.length ? data.betSources : ['real_balance'],
+    allowedSportsEntities: data.allowedSportsEntities?.trim() || '',
+    allowedMarketsCompetitors: data.allowedMarketsCompetitors?.trim() || '',
+    sportBetMultiplier: data.sportBetMultiplier == null ? 1 : data.sportBetMultiplier,
+    sportSettlementResult: data.sportSettlementResult || 'any',
+    casinoGameCategories: data.casinoGameCategories?.trim() || '',
+    casinoExceptionCategories: data.casinoExceptionCategories?.trim() || '',
+    casinoExceptionGames: data.casinoExceptionGames?.trim() || '',
+    casinoBetMultiplier: data.casinoBetMultiplier == null ? 1 : data.casinoBetMultiplier,
+    displayInGift: data.displayInGift || 'yes',
+    wageringSteps: data.wageringSteps?.trim() || '1.0000',
+    winningsWageringMultiplier: data.winningsWageringMultiplier,
+    winningsWageringPeriodHours: data.winningsWageringPeriodHours,
+    bonusClaimTimeLimitHours: data.bonusClaimTimeLimitHours,
+    createdAt: createdAt || formatDate(),
+    statusReady: isWageringConfigComplete() ? 'ready' : 'draft',
+  };
+}
+
+function formatWageringMultipliers(wagering) {
+  const sport = wagering.sportBetMultiplier ?? 1;
+  const casino = wagering.casinoBetMultiplier ?? 1;
+  return `${sport} / ${casino}`;
+}
+
+function passesWageringSearch(wagering) {
+  const query = searchWageringInput?.value?.trim().toLowerCase() || '';
+  if (!query) return true;
+  return (
+    String(wagering.id).includes(query) ||
+    wagering.name.toLowerCase().includes(query) ||
+    (WAGERING_STATUS_LABELS[wagering.status] || '').toLowerCase().includes(query)
+  );
+}
+
+function updateWageringUI() {
+  const complete = isWageringConfigComplete();
+  if (btnSaveWagering) btnSaveWagering.disabled = !complete;
+  if (!wageringStatusBlock) return;
+
+  wageringStatusBlock.classList.toggle('bonus-status--ready', complete);
+  const dot = wageringStatusBlock.querySelector('.bonus-status__dot');
+  const text = wageringStatusBlock.querySelector('.bonus-status__text');
+  if (dot) {
+    dot.classList.toggle('bonus-status__dot--incomplete', !complete);
+    dot.classList.toggle('bonus-status__dot--complete', complete);
+  }
+  if (text) {
+    text.textContent = complete
+      ? editingWageringId
+        ? `Обкатка #${editingWageringId} готова к использованию`
+        : 'Готова к сохранению'
+      : 'Не готова к использованию';
+  }
+}
+
+function openWageringPanel({ isNew, wageringId }) {
+  editingWageringId = isNew ? null : wageringId ?? null;
+  panelEmpty.classList.add('hidden');
+  panelContent.classList.remove('hidden');
+  panelHeading.textContent = isNew ? 'Добавить обкатку' : `Обкатка #${editingWageringId}`;
+
+  if (isNew) {
+    clearWageringForm();
+  } else {
+    const wagering = wagerings.find((w) => w.id === editingWageringId);
+    if (wagering) loadWageringForm(wagering);
+  }
+  updateWageringUI();
+}
+
+function renderWageringsTable() {
+  if (!wageringTbody) return;
+  const filtered = wagerings.filter(passesWageringSearch);
+
+  wageringTbody.innerHTML = '';
+  wageringsEmpty?.classList.toggle('hidden', filtered.length > 0);
+
+  filtered.forEach((wagering) => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = String(wagering.id);
+
+    const statusClass =
+      wagering.statusReady === 'ready' ? 'status--completed' : 'status--draft';
+    const statusLabel = wagering.statusReady === 'ready' ? 'Готова' : 'Черновик';
+
+    tr.innerHTML = `
+      <td>${wagering.id}</td>
+      <td>${wagering.name}</td>
+      <td>${WAGERING_STATUS_LABELS[wagering.status] || wagering.status}</td>
+      <td>${formatWageringMultipliers(wagering)}</td>
+      <td>${wagering.createdAt}</td>
+      <td><span class="status ${statusClass}">${statusLabel}</span></td>
+      <td><button class="icon-btn icon-btn--sm" type="button" title="Копировать">📋</button></td>
+    `;
+
+    if (selectedWageringRow?.dataset.id === String(wagering.id)) {
+      tr.classList.add('selected');
+      selectedWageringRow = tr;
+    }
+
+    wageringTbody.appendChild(tr);
+  });
+}
+
+function saveWagering() {
+  if (!isWageringConfigComplete()) return;
+
+  const data = getWageringFormData();
+  let wagering;
+
+  if (editingWageringId) {
+    const idx = wagerings.findIndex((w) => w.id === editingWageringId);
+    if (idx === -1) return;
+    wagering = buildWageringFromForm(data, editingWageringId, wagerings[idx].createdAt);
+    wagerings[idx] = wagering;
+  } else {
+    wagering = buildWageringFromForm(data, nextWageringId++, formatDate());
+    wagerings.push(wagering);
+    editingWageringId = wagering.id;
+    panelHeading.textContent = `Обкатка #${wagering.id}`;
+  }
+
+  renderWageringsTable();
+  refreshBonusWageringSelect(bonusWageringIdSelect?.value ? Number(bonusWageringIdSelect.value) : null);
+  updateBonusUI();
+
+  const row = wageringTbody?.querySelector(`tr[data-id="${wagering.id}"]`);
+  if (row) {
+    if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
+    selectedWageringRow = row;
+    row.classList.add('selected');
+  }
+
+  if (wageringStatusBlock) {
+    wageringStatusBlock.classList.add('bonus-status--ready');
+    wageringStatusBlock.querySelector('.bonus-status__text').textContent =
+      `Обкатка #${wagering.id} сохранена${wagering.statusReady === 'ready' ? ' и доступна к использованию' : ''}`;
+  }
 }
 
 function renderBonusesTable() {
-  const filtered = bonuses.filter(passesBonusFilter);
-
   bonusTbody.innerHTML = '';
-  bonusesEmpty.classList.toggle('hidden', filtered.length > 0);
+  bonusesEmpty.classList.toggle('hidden', bonuses.length > 0);
 
-  filtered.forEach((bonus) => {
+  bonuses.forEach((bonus) => {
     const tr = document.createElement('tr');
     tr.dataset.id = String(bonus.id);
     tr.dataset.bonusType = bonus.bonusType;
 
     const isVipLevel = bonus.bonusType === 'vip_club_level';
-    const isWheelSpin = bonus.bonusType === 'wheel_spin';
-    const hasConfig = CONFIGURED_BONUS_TYPES.includes(bonus.bonusType);
+    const isPack = isBonusPackType(bonus.bonusType);
+    const hasConfig =
+      CONFIGURED_BONUS_TYPES.includes(bonus.bonusType) || isPack;
+    const sizeText = hasConfig || isVipLevel || isPack ? formatBonusSize(bonus) : '—';
     const amountCell =
-      isVipLevel || isWheelSpin ? formatBonusSize(bonus) : hasConfig ? formatBonusSize(bonus) : '—';
-    const currencyCell =
-      isVipLevel || isWheelSpin ? '—' : hasConfig ? bonus.currencyId : '—';
-    const statusClass =
-      bonus.status === 'ready' ? 'status--completed' : 'status--draft';
-    const statusLabel = bonus.status === 'ready' ? 'Готов' : 'Черновик';
+      bonus.name && !isVipLevel ? `${bonus.name} · ${sizeText}` : sizeText;
+    const currencyCell = isVipLevel || isPack ? '—' : hasConfig ? bonus.currencyId : '—';
+    const typeCell = isPack
+      ? `${BONUS_TYPE_LABELS.bonus_pack} · ${BONUS_PACK_TYPE_LABELS[getBonusPackType(bonus)] || '—'}`
+      : BONUS_TYPE_LABELS[bonus.bonusType] || bonus.bonusType;
+    const bonusKind = getBonusKind(bonus.bonusType);
+    const kindClass =
+      bonusKind === 'atomic' ? 'bonus-kind--atomic' : 'bonus-kind--package';
 
     tr.innerHTML = `
       <td>${bonus.id}</td>
-      <td>${BONUS_TYPE_LABELS[bonus.bonusType] || bonus.bonusType}</td>
+      <td>${typeCell}</td>
+      <td><span class="bonus-kind ${kindClass}">${BONUS_KIND_LABELS[bonusKind]}</span></td>
       <td>${amountCell}</td>
       <td>${currencyCell}</td>
       <td>${bonus.createdAt}</td>
-      <td><span class="status ${statusClass}">${statusLabel}</span></td>
       <td><button class="icon-btn icon-btn--sm" type="button" title="Копировать">📋</button></td>
     `;
 
@@ -2289,6 +3162,8 @@ function saveBonus(type) {
 
   renderBonusesTable();
   refreshGraphBonusSelect();
+  refreshVipLvlUpBonusSelects();
+  refreshVipStepRewardBonusSelects();
   GraphEditor.refreshBonusNodes();
 
   const row = bonusTbody.querySelector(`tr[data-id="${bonus.id}"]`);
@@ -2327,6 +3202,12 @@ bonusTbody.addEventListener('click', (e) => {
   selectBonusRow(row);
 });
 
+wageringTbody?.addEventListener('click', (e) => {
+  const row = e.target.closest('tr');
+  if (!row || e.target.closest('button')) return;
+  selectWageringRow(row);
+});
+
 triggerTbody?.addEventListener('click', (e) => {
   const row = e.target.closest('tr');
   if (!row || e.target.closest('button')) return;
@@ -2343,6 +3224,12 @@ btnAddBonus.addEventListener('click', () => {
   clearSelection();
   switchPageSection('bonus');
   openBonusPanel({ isNew: true });
+});
+
+btnAddWagering?.addEventListener('click', () => {
+  clearSelection();
+  switchPageSection('wagering');
+  openWageringPanel({ isNew: true });
 });
 
 btnAddTriggerConfig?.addEventListener('click', () => {
@@ -2408,17 +3295,6 @@ userListEl?.addEventListener('click', (e) => {
   renderPromoUserList();
 });
 
-document.querySelectorAll('#bonus-filters .filter-tab').forEach((tab) => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('#bonus-filters .filter-tab').forEach((t) => {
-      t.classList.remove('filter-tab--active');
-    });
-    tab.classList.add('filter-tab--active');
-    bonusFilter = tab.dataset.bonusFilter;
-    renderBonusesTable();
-  });
-});
-
 document.querySelectorAll('#trigger-filters .filter-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('#trigger-filters .filter-tab').forEach((t) => {
@@ -2445,6 +3321,17 @@ bonusTypeTabs.forEach((tab) => {
     }
   });
 });
+
+bonusPackSubtypeTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    switchBonusPackSubtype(tab.dataset.packType);
+  });
+});
+
+bonusNameInput?.addEventListener('input', updateBonusUI);
+bonusNameInput?.addEventListener('change', updateBonusUI);
+bonusHasWageringSelect?.addEventListener('change', updateBonusUI);
+bonusWageringIdSelect?.addEventListener('change', updateBonusUI);
 
 triggerTypeTabs.forEach((tab) => {
   tab.addEventListener('click', () => switchTriggerType(tab.dataset.triggerType));
@@ -2510,118 +3397,145 @@ bonusNodeLabelInput?.addEventListener('input', () => {
 GraphEditor.init({
   getBonuses: () => bonuses,
   getTriggers: () => triggers,
-  getPackages: () => rewardPackages,
 });
 
 promotions = SEED_PROMOTIONS.map((p) => ({ ...p }));
 nextPromoId = promotions.reduce((max, p) => Math.max(max, p.id), 0) + 1;
+bonuses = SEED_BONUSES.map((b) => ({
+  ...b,
+  pool: b.pool ? b.pool.map((entry) => ({ ...entry })) : undefined,
+}));
+nextBonusId = bonuses.reduce((max, b) => Math.max(max, b.id), 0) + 1;
+wagerings = SEED_WAGERINGS.map((w) => ({ ...w }));
+nextWageringId = wagerings.reduce((max, w) => Math.max(max, w.id), 0) + 1;
 vipProgram = { ...SEED_VIP_PROGRAM };
 vipTiers = SEED_VIP_TIERS.map((t) => ({
   ...t,
   progression: { ...t.progression },
+  stepRewardAccrual: normalizeStepRewardAccrual(t.stepRewardAccrual || t.lootboxAccrual),
 }));
-rewardPackages = SEED_REWARD_PACKAGES.map((p) => ({
-  ...p,
-  tiers: p.tiers.map((tier) => ({
-    ...tier,
-    rewards: tier.rewards.map((r) => ({ ...r })),
-  })),
-}));
-nextPackageId = rewardPackages.reduce((max, p) => Math.max(max, p.id), 0) + 1;
-
 switchBonusFormula('fixed');
 switchBonusType('cash');
+clearBonusWageringForm();
 switchTriggerType('registration');
 updateBonusUI();
 updateTriggerUI();
 refreshGraphBonusSelect();
 refreshGraphTriggerSelect();
-refreshGraphPackageSelect();
 renderBonusesTable();
+renderWageringsTable();
 renderTriggersTable();
 renderVipTiersTable();
-renderPackagesTable();
 renderPromotionsTable();
+
+sectionWagering?.querySelectorAll('.wagering-field').forEach((el) => {
+  el.addEventListener('input', updateWageringUI);
+  el.addEventListener('change', () => {
+    updateWageringConditionalFields();
+    updateWageringUI();
+  });
+});
+
+sectionWagering?.querySelectorAll('[data-wagering-checkbox]').forEach((group) => {
+  group.addEventListener('change', updateWageringUI);
+});
+
+btnSaveWagering?.addEventListener('click', saveWagering);
+searchWageringInput?.addEventListener('input', renderWageringsTable);
 
 btnAddVipTier?.addEventListener('click', addVipTierRow);
 btnSaveVipTiers?.addEventListener('click', saveVipTiers);
-btnAddPackage?.addEventListener('click', () => {
-  clearSelection();
-  switchPageSection('package');
-  openPackagePanel({ isNew: true });
-  panelEmpty.classList.add('hidden');
-  panelContent.classList.remove('hidden');
+
+function bindBonusPoolEditorEvents(editorEl, renderPool) {
+  const addBtn =
+    editorEl === wheelPoolEditor
+      ? btnAddWheelPoolRow
+      : editorEl === lootboxPoolEditor
+        ? btnAddLootboxPoolRow
+        : null;
+
+  addBtn?.addEventListener('click', () => {
+    const pool = readBonusPoolDraftFromEditor(editorEl);
+    pool.push({ bonusId: null, probability: '' });
+    renderPool(pool);
+    updateBonusUI();
+  });
+
+  editorEl?.addEventListener('click', (e) => {
+    if (!e.target.closest('.lootbox-pool-remove')) return;
+    const rows = [...editorEl.querySelectorAll('.lootbox-pool-row')];
+    if (rows.length <= 1) {
+      renderPool([]);
+      updateBonusUI();
+      return;
+    }
+    const row = e.target.closest('.lootbox-pool-row');
+    const index = rows.indexOf(row);
+    const pool = rows.map((r) => ({
+      bonusId: r.querySelector('[data-pool="bonusId"]')?.value
+        ? Number(r.querySelector('[data-pool="bonusId"]').value)
+        : null,
+      probability: r.querySelector('[data-pool="probability"]')?.value ?? '',
+    }));
+    if (index >= 0) pool.splice(index, 1);
+    renderPool(pool);
+    updateBonusUI();
+  });
+
+  editorEl?.addEventListener('input', updateBonusUI);
+  editorEl?.addEventListener('change', updateBonusUI);
+}
+
+bindBonusPoolEditorEvents(wheelPoolEditor, renderWheelPoolEditor);
+bindBonusPoolEditorEvents(lootboxPoolEditor, renderLootboxPoolEditor);
+
+btnAddBonusPackSimpleRow?.addEventListener('click', () => {
+  const bonuses = readBonusPackSimpleFromEditor();
+  bonuses.push({ bonusId: null });
+  renderBonusPackSimpleEditor(bonuses);
+  updateBonusUI();
 });
-btnSavePackage?.addEventListener('click', savePackage);
 
-packageNameInput?.addEventListener('input', updatePackageUI);
-packageScheduleSelect?.addEventListener('change', updatePackageUI);
+bonusPackSimpleEditor?.addEventListener('click', (e) => {
+  if (!e.target.closest('.lootbox-pool-remove')) return;
+  const rows = [...bonusPackSimpleEditor.querySelectorAll('.bonus-pack-simple-row')];
+  if (rows.length <= 1) {
+    renderBonusPackSimpleEditor([]);
+    updateBonusUI();
+    return;
+  }
+  const row = e.target.closest('.bonus-pack-simple-row');
+  const index = rows.indexOf(row);
+  const bonuses = rows.map((r) => ({
+    bonusId: r.querySelector('[data-pack-simple="bonusId"]')?.value
+      ? Number(r.querySelector('[data-pack-simple="bonusId"]').value)
+      : null,
+  }));
+  if (index >= 0) bonuses.splice(index, 1);
+  renderBonusPackSimpleEditor(bonuses);
+  updateBonusUI();
+});
 
-vipTierEditor?.addEventListener('click', (e) => {
+bonusPackSimpleEditor?.addEventListener('input', updateBonusUI);
+bonusPackSimpleEditor?.addEventListener('change', updateBonusUI);
+
+vipProgressionEditor?.addEventListener('change', (e) => {
+  const select = e.target.closest('[data-pf="criterion"]');
+  if (!select) return;
+  const block = select.closest('.vip-progression-block');
+  const label = block?.querySelector('[data-pf="thresholdLabel"]');
+  if (label) label.textContent = getVipThresholdLabel(select.value);
+});
+
+vipProgressionEditor?.addEventListener('click', (e) => {
   if (e.target.closest('.vip-tier-remove')) {
-    const row = e.target.closest('.vip-tier-row');
-    const index = Number(row?.dataset.index);
+    const block = e.target.closest('.vip-progression-block');
+    const index = Number(block?.dataset.index);
     if (!Number.isNaN(index)) {
-      vipTiers = readVipTiersFromEditor();
-      applyVipProgressionFromEditor();
+      vipTiers = readVipTiersFromProgressionEditor();
       vipTiers.splice(index, 1);
-      renderVipTierEditor();
       renderVipProgressionEditor();
       renderVipTiersTable();
     }
   }
-});
-
-packageTierEditor?.addEventListener('click', (e) => {
-  const addBtn = e.target.closest('.package-add-reward');
-  if (addBtn) {
-    const tierIndex = Number(addBtn.dataset.tier);
-    draftPackageTiers = readPackageTiersFromEditor();
-    draftPackageTiers[tierIndex].rewards.push(createEmptyReward('cashback'));
-    renderPackageTierEditor();
-    return;
-  }
-  const removeBtn = e.target.closest('.package-reward-remove');
-  if (removeBtn) {
-    const row = removeBtn.closest('.package-reward-row');
-    const tierIndex = Number(row?.dataset.tier);
-    const rewardIndex = Number(row?.dataset.reward);
-    draftPackageTiers = readPackageTiersFromEditor();
-    draftPackageTiers[tierIndex].rewards.splice(rewardIndex, 1);
-    renderPackageTierEditor();
-  }
-});
-
-packageTierEditor?.addEventListener('change', (e) => {
-  if (e.target.matches('[data-rf="kind"]')) {
-    draftPackageTiers = readPackageTiersFromEditor();
-    const row = e.target.closest('.package-reward-row');
-    const tierIndex = Number(row?.dataset.tier);
-    const rewardIndex = Number(row?.dataset.reward);
-    const kind = e.target.value;
-    draftPackageTiers[tierIndex].rewards[rewardIndex] = createEmptyReward(kind);
-    renderPackageTierEditor();
-    return;
-  }
-  updatePackageUI();
-});
-
-packageTierEditor?.addEventListener('input', () => updatePackageUI());
-
-packagesTbody?.addEventListener('click', (e) => {
-  const row = e.target.closest('tr');
-  if (!row || e.target.closest('button')) return;
-  selectPackageRow(row);
-});
-
-graphPackageSelect?.addEventListener('change', () => {
-  const selected = getSelectedGraphNodeId();
-  if (!selected) return;
-  const packageId = graphPackageSelect.value ? Number(graphPackageSelect.value) : null;
-  GraphEditor.updateNode(selected, { packageId });
-});
-packageNodeLabelInput?.addEventListener('input', () => {
-  const selected = getSelectedGraphNodeId();
-  if (!selected) return;
-  GraphEditor.updateNode(selected, { label: packageNodeLabelInput.value });
 });

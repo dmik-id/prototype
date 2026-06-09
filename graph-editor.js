@@ -23,7 +23,6 @@ const GraphEditor = (() => {
   let dragNode = null;
   let getBonuses = () => [];
   let getTriggers = () => [];
-  let getPackages = () => [];
   let underhoodPopupNodeId = null;
 
   const els = {};
@@ -31,7 +30,6 @@ const GraphEditor = (() => {
   const UNDERHOOD_TITLES = {
     trigger: 'Триггер — внутренний сценарий',
     bonus: 'Награда — внутренний сценарий',
-    reward_package: 'Пакет наград — внутренний сценарий',
   };
 
   const TRIGGER_TYPE_LABELS = {
@@ -46,7 +44,6 @@ const GraphEditor = (() => {
   function init(options = {}) {
     getBonuses = options.getBonuses || (() => []);
     getTriggers = options.getTriggers || (() => []);
-    getPackages = options.getPackages || (() => []);
 
     els.wrap = document.getElementById('graph-canvas-wrap');
     els.canvas = document.getElementById('graph-canvas');
@@ -62,7 +59,6 @@ const GraphEditor = (() => {
 
     document.getElementById('btn-add-trigger')?.addEventListener('click', () => addNode('trigger'));
     document.getElementById('btn-add-bonus-node')?.addEventListener('click', () => addNode('bonus'));
-    document.getElementById('btn-add-package-node')?.addEventListener('click', () => addNode('reward_package'));
     document.getElementById('graph-zoom-in')?.addEventListener('click', () => setZoom(zoom + 0.1));
     document.getElementById('graph-zoom-out')?.addEventListener('click', () => setZoom(zoom - 0.1));
     document.getElementById('graph-zoom-fit')?.addEventListener('click', fitToView);
@@ -110,7 +106,6 @@ const GraphEditor = (() => {
     const offset = nodes.length * 24;
     let label = 'Награда';
     if (type === 'trigger') label = 'Триггер';
-    if (type === 'reward_package') label = 'Пакет наград';
 
     const node = {
       id: `n${nextNodeId++}`,
@@ -120,7 +115,6 @@ const GraphEditor = (() => {
       label,
       triggerId: null,
       bonusId: null,
-      packageId: null,
       ...props,
     };
     nodes.push(node);
@@ -169,17 +163,14 @@ const GraphEditor = (() => {
 
   function defaultFromPort(nodeId) {
     const node = getNode(nodeId);
-    if (node?.type === 'trigger' || node?.type === 'reward_package') return 'completed';
+    if (node?.type === 'trigger') return 'completed';
     return 'end';
   }
 
   function canConnect(fromNode, toNode) {
     if (!fromNode || !toNode) return false;
     if (fromNode.type === 'trigger') {
-      return toNode.type === 'bonus' || toNode.type === 'reward_package' || toNode.type === 'trigger';
-    }
-    if (fromNode.type === 'reward_package') {
-      return toNode.type === 'bonus';
+      return toNode.type === 'bonus' || toNode.type === 'trigger';
     }
     if (fromNode.type === 'bonus') {
       return toNode.type === 'bonus' || toNode.type === 'trigger';
@@ -335,6 +326,7 @@ const GraphEditor = (() => {
 
   function bonusSizeShort(bonus) {
     if (
+      bonus.formula === 'percent' ||
       bonus.formula === 'percent_deposit' ||
       bonus.formula === 'percent_bets' ||
       bonus.bonusType === 'cashback'
@@ -348,30 +340,50 @@ const GraphEditor = (() => {
     if (!bonusId) return 'Выберите бонус справа →';
     const bonus = getBonuses().find((b) => b.id === bonusId);
     if (!bonus) return `Бонус #${bonusId}`;
+    const namePart = bonus.name ? ` «${bonus.name}»` : '';
     if (bonus.bonusType === 'cash') {
-      return `Денежный #${bonus.id} — ${bonusSizeShort(bonus)}`;
+      return `Денежный #${bonus.id}${namePart} — ${bonusSizeShort(bonus)}`;
     }
     if (bonus.bonusType === 'cashback') {
-      return `Кэшбэк #${bonus.id} — ${bonusSizeShort(bonus)}`;
+      return `Кэшбэк #${bonus.id}${namePart} — ${bonusSizeShort(bonus)}`;
     }
     if (bonus.bonusType === 'fs') {
-      return `FS #${bonus.id} — ${bonus.amount}`;
+      return `FS #${bonus.id}${namePart} — ${bonus.amount}`;
     }
     if (bonus.bonusType === 'fb') {
-      return `FB #${bonus.id} — ${bonus.amount}`;
+      return `FB #${bonus.id}${namePart} — ${bonus.amount}`;
+    }
+    if (bonus.bonusType === 'bonus_game') {
+      const rounds = bonus.roundsCount ?? '—';
+      const game = bonus.gameId ?? '—';
+      return `Бонусная игра #${bonus.id}${namePart} — игра ${game} · ${rounds} раунд(ов)`;
     }
     if (bonus.bonusType === 'reload') {
-      return `Reload #${bonus.id} — ${bonusSizeShort(bonus)}`;
+      return `Reload #${bonus.id}${namePart} — ${bonusSizeShort(bonus)}`;
     }
     if (bonus.bonusType === 'vip_club_level') {
       return `VIP Club уровень #${bonus.id} — ${bonus.name || '—'}`;
     }
-    if (bonus.bonusType === 'wheel_spin') {
-      const spins = bonus.spinsCount ?? '—';
-      const n = Array.isArray(bonus.spinBonuses) ? bonus.spinBonuses.length : 0;
-      return `Колесо фортуны #${bonus.id} — ${spins} спин(ов) · ${n} наград`;
+    if (
+      bonus.bonusType === 'bonus_pack' ||
+      bonus.bonusType === 'wheel_spin' ||
+      bonus.bonusType === 'lootbox'
+    ) {
+      const packType =
+        bonus.packType ||
+        (bonus.bonusType === 'wheel_spin' ? 'wheel' : bonus.bonusType === 'lootbox' ? 'lootbox' : 'simple');
+      if (packType === 'wheel') {
+        const n = Array.isArray(bonus.pool) ? bonus.pool.length : 0;
+        return `Пакет · Колесо #${bonus.id}${namePart} — ${n} наград`;
+      }
+      if (packType === 'lootbox') {
+        const n = Array.isArray(bonus.pool) ? bonus.pool.length : 0;
+        return `Пакет · Лутбокс #${bonus.id}${namePart} — ${n} наград`;
+      }
+      const n = Array.isArray(bonus.bonuses) ? bonus.bonuses.length : 0;
+      return `Пакет #${bonus.id}${namePart} — ${n} бонус(ов)`;
     }
-    return `Бонус #${bonus.id}`;
+    return `Бонус #${bonus.id}${namePart}`;
   }
 
   function triggerLabel(triggerId) {
@@ -384,18 +396,6 @@ const GraphEditor = (() => {
 
   function triggerBody(node) {
     return triggerLabel(node.triggerId);
-  }
-
-  function packageLabel(packageId) {
-    if (!packageId) return 'Выберите пакет справа →';
-    const pkg = getPackages().find((p) => p.id === packageId);
-    if (!pkg) return `Пакет #${packageId}`;
-    const rewardCount = (pkg.tiers || []).reduce((n, t) => n + (t.rewards?.length || 0), 0);
-    return `${pkg.name} — ${rewardCount} наград`;
-  }
-
-  function packageBody(node) {
-    return packageLabel(node.packageId);
   }
 
   function underhoodMiniNode(kind, id, body, style, statusClass) {
@@ -525,14 +525,12 @@ const GraphEditor = (() => {
     els.nodesLayer.innerHTML = nodes
       .map((node) => {
         const isTrigger = node.type === 'trigger';
-        const isPackage = node.type === 'reward_package';
         let body = bonusLabel(node.bonusId);
         if (isTrigger) body = triggerBody(node);
-        if (isPackage) body = packageBody(node);
 
-        const icon = isTrigger ? '⚡' : isPackage ? '📦' : '🎁';
-        const showUnderhood = isTrigger || node.type === 'bonus' || isPackage;
-        const isRewardOut = isTrigger || isPackage;
+        const icon = isTrigger ? '⚡' : '🎁';
+        const showUnderhood = isTrigger || node.type === 'bonus';
+        const isRewardOut = isTrigger;
         const startPort = `<div class="graph-port-row graph-port-row--start">
               <span class="graph-port graph-port--start" data-port="start" title="start — подключите линию"></span>
               <span class="graph-port-label">start</span>
@@ -854,10 +852,6 @@ const GraphEditor = (() => {
     render();
   }
 
-  function refreshPackageNodes() {
-    render();
-  }
-
   function refreshTriggerNodes() {
     render();
   }
@@ -877,7 +871,6 @@ const GraphEditor = (() => {
     getScenario,
     createDefaultScenario,
     refreshBonusNodes,
-    refreshPackageNodes,
     refreshTriggerNodes,
     cancelConnect,
     render,

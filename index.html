@@ -49,9 +49,9 @@
                 <a href="#" class="nav-sub nav-sub--nested nav-sub--active" data-page-section="list">Список</a>
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="promo">Настройка акции</a>
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="bonus">Настройка бонуса</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="wagering">Настройки обкатки</a>
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="trigger">Настройка триггера</a>
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="vip">VIP Club</a>
-                <a href="#" class="nav-sub nav-sub--nested" data-page-section="package">Пакеты наград</a>
               </div>
             </div>
           </div>
@@ -127,18 +127,18 @@
               <span class="search__icon">🔍</span>
               <input type="search" id="search-bonus" placeholder="Поиск по ID, типу или сумме" />
             </div>
-            <div class="filters" id="bonus-filters">
-              <button class="filter-tab filter-tab--active" type="button" data-bonus-filter="all">Все</button>
-              <button class="filter-tab" type="button" data-bonus-filter="cash">Денежный</button>
-              <button class="filter-tab" type="button" data-bonus-filter="fs">FS</button>
-              <button class="filter-tab" type="button" data-bonus-filter="fb">FB</button>
-              <button class="filter-tab" type="button" data-bonus-filter="vip_club_level">VIP Club</button>
-              <button class="filter-tab" type="button" data-bonus-filter="wheel_spin">Колесо фортуны</button>
-              <button class="filter-tab" type="button" data-bonus-filter="ready">Готов</button>
-              <button class="filter-tab" type="button" data-bonus-filter="draft">Черновик</button>
-            </div>
             <button class="btn btn--primary" type="button" id="btn-add-bonus">
               <span>+</span> Добавить бонус
+            </button>
+          </div>
+
+          <div class="toolbar hidden" id="toolbar-wagering">
+            <div class="search">
+              <span class="search__icon">🔍</span>
+              <input type="search" id="search-wagering" placeholder="Поиск по ID или названию" />
+            </div>
+            <button class="btn btn--primary" type="button" id="btn-add-wagering">
+              <span>+</span> Добавить обкатку
             </button>
           </div>
 
@@ -164,19 +164,9 @@
           </div>
 
           <div class="toolbar hidden" id="toolbar-vip">
-            <p class="toolbar__hint">Уровни VIP Club — используются в пакетах наград для привязки параметров по tier.</p>
+            <p class="toolbar__hint">Уровни VIP Club — название, критерий (депозит / дроп) и порог достижения.</p>
             <button class="btn btn--primary" type="button" id="btn-add-vip-tier">
               <span>+</span> Добавить уровень
-            </button>
-          </div>
-
-          <div class="toolbar hidden" id="toolbar-package">
-            <div class="search">
-              <span class="search__icon">🔍</span>
-              <input type="search" id="search-package" placeholder="Поиск по названию" />
-            </div>
-            <button class="btn btn--primary" type="button" id="btn-add-package">
-              <span>+</span> Добавить пакет
             </button>
           </div>
 
@@ -208,9 +198,6 @@
                 </button>
                 <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-bonus-node">
                   <span class="graph-btn-dot graph-btn-dot--bonus" aria-hidden="true"></span>Награда
-                </button>
-                <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-package-node">
-                  <span class="graph-btn-dot graph-btn-dot--package" aria-hidden="true"></span>Пакет наград
                 </button>
               </div>
             </div>
@@ -249,16 +236,34 @@
                 <tr>
                   <th>ID <span class="sort">↕</span></th>
                   <th>Тип <span class="sort">↕</span></th>
+                  <th>Вид <span class="sort">↕</span></th>
                   <th>Размер <span class="sort">↕</span></th>
                   <th>Валюта <span class="sort">↕</span></th>
                   <th>Дата создания <span class="sort">↕</span></th>
-                  <th>Статус <span class="sort">↕</span></th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="bonuses-tbody"></tbody>
             </table>
             <p class="table-empty hidden" id="bonuses-empty">Нет бонусов. Нажмите «Добавить бонус», чтобы создать первый.</p>
+          </div>
+
+          <div class="table-wrap hidden" id="table-wagering">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID <span class="sort">↕</span></th>
+                  <th>Название <span class="sort">↕</span></th>
+                  <th>Статус ставок <span class="sort">↕</span></th>
+                  <th>Мультипликатор (спорт / казино) <span class="sort">↕</span></th>
+                  <th>Дата создания <span class="sort">↕</span></th>
+                  <th>Статус <span class="sort">↕</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="wagerings-tbody"></tbody>
+            </table>
+            <p class="table-empty hidden" id="wagerings-empty">Нет обкаток. Нажмите «Добавить обкатку», чтобы создать первую.</p>
           </div>
 
           <div class="table-wrap hidden" id="table-trigger">
@@ -286,6 +291,7 @@
                   <th>Название</th>
                   <th>Критерий</th>
                   <th>Порог</th>
+                  <th>LVL-up бонус</th>
                   <th></th>
                 </tr>
               </thead>
@@ -294,22 +300,6 @@
             <p class="table-empty hidden" id="vip-tiers-empty">Нет уровней. Добавьте первый уровень VIP Club.</p>
           </div>
 
-          <div class="table-wrap hidden" id="table-package">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Название</th>
-                  <th>Программа</th>
-                  <th>Наград (всего)</th>
-                  <th>Статус</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="packages-tbody"></tbody>
-            </table>
-            <p class="table-empty hidden" id="packages-empty">Нет пакетов. Создайте пакет наград для VIP Club.</p>
-          </div>
         </section>
 
         <aside class="edit-panel hidden" id="edit-panel">
@@ -348,7 +338,7 @@
                     <option value="">Не выбрана</option>
                     <option value="vip_club">VIP Club</option>
                   </select>
-                  <p class="form-hint">Для акций с пакетом наград по уровням VIP.</p>
+                  <p class="form-hint">Для акций типа «Программа лояльности».</p>
                 </div>
 
                 <div class="form-block">
@@ -437,35 +427,18 @@
                 </div>
               </div>
 
-              <!-- Свойства выбранной ноды: Пакет наград -->
-              <div class="hidden" id="promo-panel-package-node">
-                <p class="graph-node-panel__badge graph-node-panel__badge--package">Пакет наград</p>
-                <div class="form-block">
-                  <label class="form-label" for="graph-package-select">Пакет</label>
-                  <select class="form-select" id="graph-package-select" disabled>
-                    <option value="">Сначала создайте пакет</option>
-                  </select>
-                  <p class="form-hint" id="graph-package-hint">Пакет задаёт набор наград (кэшбэк, FS, reload) для каждого уровня VIP.</p>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="package-node-label">Подпись на схеме</label>
-                  <input class="form-input" id="package-node-label" type="text" placeholder="Пакет VIP" />
-                </div>
-              </div>
             </div>
 
             <!-- Настройка бонуса -->
             <div class="section-content hidden" id="section-bonus">
-              <div class="form-block">
-                <span class="form-label">Формула начисления</span>
-                <div class="bonus-formula-tabs" id="bonus-formula-tabs">
-                  <button class="bonus-formula-tab bonus-formula-tab--active" type="button" data-bonus-formula="fixed">Фиксированная сумма</button>
-                  <button class="bonus-formula-tab" type="button" data-bonus-formula="percent_deposit">% от депозита</button>
-                  <button class="bonus-formula-tab" type="button" data-bonus-formula="percent_bets">% от ставок</button>
-                </div>
-                <p class="form-hint" id="bonus-formula-hint">
-                  Фиксированный размер награды. В акции триггер (например, депозит) определяет, когда выдать бонус.
-                </p>
+              <div class="form-block" id="bonus-name-block">
+                <label class="form-label" for="bonus-name">Название</label>
+                <input
+                  class="form-input"
+                  id="bonus-name"
+                  type="text"
+                  placeholder="Например, Приветственный бонус"
+                />
               </div>
 
               <div class="form-block" id="bonus-type-block">
@@ -473,55 +446,75 @@
                 <div class="bonus-type-tabs" id="bonus-type-tabs">
                   <button class="bonus-type-tab" type="button" data-bonus-type="fs">FS</button>
                   <button class="bonus-type-tab" type="button" data-bonus-type="fb">FB</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="bonus_game">Бонусная игра</button>
                   <button class="bonus-type-tab bonus-type-tab--active" type="button" data-bonus-type="cash">Денежный</button>
-                  <button class="bonus-type-tab" type="button" data-bonus-type="cashback">Кэшбэк</button>
-                  <button class="bonus-type-tab" type="button" data-bonus-type="reload">Релоад</button>
-                  <button class="bonus-type-tab" type="button" data-bonus-type="vip_club_level">VIP Club</button>
-                  <button class="bonus-type-tab" type="button" data-bonus-type="wheel_spin">Спин колеса фортуны</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="bonus_pack">Пакет бонусов</button>
                 </div>
               </div>
 
-              <!-- Колесо фортуны -->
-              <div class="bonus-type-panel hidden" id="bonus-panel-wheel_spin">
-                <h3 class="bonus-panel__title">Wheel of Fortune (spin)</h3>
+              <!-- Пакет бонусов -->
+              <div class="bonus-type-panel hidden" id="bonus-panel-bonus_pack">
+                <h3 class="bonus-panel__title">Пакет бонусов</h3>
                 <p class="bonus-panel__hint">
-                  Укажите количество выдаваемых спинов и настройки бонусов, которые могут выпасть в рамках спина.
+                  Контейнер наград: колесо фортуны, лутбокс или фиксированный набор бонусов.
                 </p>
 
                 <div class="form-block">
-                  <label class="form-label" for="wheel-spin-count">Количество спинов</label>
-                  <input
-                    class="form-input wheel-spin-field"
-                    id="wheel-spin-count"
-                    type="number"
-                    min="1"
-                    step="1"
-                    data-field="spinsCount"
-                    placeholder="1"
-                  />
+                  <span class="form-label">Тип пакета</span>
+                  <div class="bonus-type-tabs" id="bonus-pack-subtype-tabs">
+                    <button class="bonus-type-tab bonus-type-tab--active" type="button" data-pack-type="wheel">Колесо фортуны</button>
+                    <button class="bonus-type-tab" type="button" data-pack-type="lootbox">Лутбокс</button>
+                    <button class="bonus-type-tab" type="button" data-pack-type="simple">Пакет бонусов</button>
+                  </div>
                 </div>
 
-                <div class="form-block">
-                  <label class="form-label" for="wheel-spin-bonuses">Бонусы в спине (JSON)</label>
-                  <textarea
-                    class="form-input wheel-spin-field"
-                    id="wheel-spin-bonuses"
-                    rows="10"
-                    data-field="spinBonusesJson"
-                    placeholder='[{"kind":"cash","currencyId":123,"amount":10},{"kind":"fs","currencyId":123,"amount":20}]'
-                  ></textarea>
-                  <p class="form-hint">
-                    Формат: массив объектов. Минимум поля <code>kind</code>. Допустимые <code>kind</code>:
-                    <code>cash</code>, <code>fs</code>, <code>fb</code>, <code>cashback</code>, <code>reload</code>,
-                    <code>vip_club_level</code>.
-                  </p>
+                <!-- Подтип: колесо фортуны -->
+                <div class="bonus-pack-sub" id="bonus-pack-sub-wheel">
+                  <div class="form-block">
+                    <span class="form-label">Секторы колеса</span>
+                    <div id="wheel-pool-editor" class="lootbox-pool-editor"></div>
+                    <button class="btn btn--secondary btn--sm btn--full" type="button" id="btn-add-wheel-pool-row">
+                      + Добавить награду в колесо
+                    </button>
+                    <p class="form-hint">
+                      При каждом спине выбирается одна награда по заданным вероятностям. Сумма вероятностей должна быть 100%. Минимум одна строка с готовым бонусом FS / FB / бонусная игра / денежный.
+                    </p>
+                  </div>
                 </div>
 
-                <div class="bonus-status" id="wheel_spin-bonus-status">
+                <!-- Подтип: лутбокс -->
+                <div class="bonus-pack-sub hidden" id="bonus-pack-sub-lootbox">
+                  <div class="form-block">
+                    <span class="form-label">Пул наград</span>
+                    <div id="lootbox-pool-editor" class="lootbox-pool-editor"></div>
+                    <button class="btn btn--secondary btn--sm btn--full" type="button" id="btn-add-lootbox-pool-row">
+                      + Добавить награду в пул
+                    </button>
+                    <p class="form-hint">
+                      При открытии кейса выбирается одна награда по заданным вероятностям. Сумма вероятностей должна быть 100%. Минимум одна строка с готовым бонусом FS / FB / бонусная игра / денежный.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Подтип: простой пакет -->
+                <div class="bonus-pack-sub hidden" id="bonus-pack-sub-simple">
+                  <div class="form-block">
+                    <span class="form-label">Бонусы в пакете</span>
+                    <div id="bonus-pack-simple-editor" class="bonus-pack-simple-editor"></div>
+                    <button class="btn btn--secondary btn--sm btn--full" type="button" id="btn-add-bonus-pack-simple-row">
+                      + Добавить бонус
+                    </button>
+                    <p class="form-hint">
+                      Все перечисленные бонусы выдаются игроку одновременно. Ссылки только на сохранённые FS, FB, бонусную игру или денежный.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bonus-status" id="bonus_pack-bonus-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
                   <span class="bonus-status__text">Не готов к добавлению в акцию</span>
                 </div>
-                <button class="btn btn--primary btn--full" type="button" id="btn-save-wheel_spin-bonus" disabled>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-bonus_pack-bonus" disabled>
                   Сохранить настройки бонуса
                 </button>
               </div>
@@ -530,6 +523,17 @@
               <div class="bonus-type-panel" id="bonus-panel-cash">
                 <h3 class="bonus-panel__title">Bonus settings</h3>
                 <p class="bonus-panel__hint">Заполните все поля — бонус станет доступен для добавления в акцию.</p>
+
+                <div class="form-block">
+                  <span class="form-label">Формула начисления</span>
+                  <div class="bonus-formula-tabs" id="bonus-formula-tabs">
+                    <button class="bonus-formula-tab bonus-formula-tab--active" type="button" data-bonus-formula="fixed">Фиксированная сумма</button>
+                    <button class="bonus-formula-tab" type="button" data-bonus-formula="percent">% процент</button>
+                  </div>
+                  <p class="form-hint" id="bonus-formula-hint">
+                    Фиксированный размер награды. В акции триггер (например, депозит) определяет, когда выдать бонус.
+                  </p>
+                </div>
 
                 <div class="form-block">
                   <label class="form-label" for="cash-currencyId">currencyId</label>
@@ -592,6 +596,25 @@
                 <div class="form-block">
                   <label class="form-label" for="cash-maxBetRateOrdinary">maxBetRateOrdinary</label>
                   <input class="form-input cash-field" id="cash-maxBetRateOrdinary" type="number" step="0.1" data-field="maxBetRateOrdinary" placeholder="100" />
+                </div>
+
+                <div class="bonus-wagering-settings" id="bonus-wagering-settings">
+                  <hr class="section-divider" />
+                  <h4 class="wagering-subsection__title">Обкатка</h4>
+                  <div class="form-block" id="bonus-wagering-block">
+                    <label class="form-label" for="bonus-hasWagering">Обкатка</label>
+                    <select class="form-select" id="bonus-hasWagering">
+                      <option value="no">Нет</option>
+                      <option value="yes">Есть</option>
+                    </select>
+                  </div>
+                  <div class="form-block hidden" id="bonus-wagering-select-block">
+                    <label class="form-label" for="bonus-wageringId">Настройка обкатки</label>
+                    <select class="form-select" id="bonus-wageringId">
+                      <option value="">Сначала создайте обкатку</option>
+                    </select>
+                    <p class="form-hint">Выберите сохранённую обкатку из раздела «Настройки обкатки».</p>
+                  </div>
                 </div>
 
                 <div class="bonus-status" id="cash-bonus-status">
@@ -668,6 +691,33 @@
                   <span class="bonus-status__text">Не готов к добавлению в акцию</span>
                 </div>
                 <button class="btn btn--primary btn--full" type="button" id="btn-save-fs-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+
+              <!-- Бонусная игра -->
+              <div class="bonus-type-panel hidden" id="bonus-panel-bonus_game">
+                <h3 class="bonus-panel__title">Bonus settings (Бонусная игра)</h3>
+                <p class="bonus-panel__hint">Заполните все поля — бонус станет доступен для добавления в акцию.</p>
+
+                <div class="form-block">
+                  <label class="form-label" for="bonus-game-gameId">gameId</label>
+                  <input class="form-input bonus-game-field" id="bonus-game-gameId" type="number" data-field="gameId" placeholder="42" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="bonus-game-roundsCount">Количество раундов</label>
+                  <input class="form-input bonus-game-field" id="bonus-game-roundsCount" type="number" min="1" step="1" data-field="roundsCount" placeholder="3" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="bonus-game-expiration">Срок действия (часы)</label>
+                  <input class="form-input bonus-game-field" id="bonus-game-expiration" type="number" data-field="expirationInHours" placeholder="72" />
+                </div>
+
+                <div class="bonus-status" id="bonus_game-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-bonus_game-bonus" disabled>
                   Сохранить настройки бонуса
                 </button>
               </div>
@@ -800,12 +850,7 @@
 
               <div class="bonus-type-panel hidden" id="bonus-panel-vip_club_level">
                 <h3 class="bonus-panel__title">VIP Club level</h3>
-                <p class="bonus-panel__hint">Укажите название уровня — бонус станет доступен для добавления в акцию.</p>
-
-                <div class="form-block">
-                  <label class="form-label" for="vip_club_level-name">Название</label>
-                  <input class="form-input vip-club-level-field" id="vip_club_level-name" type="text" data-field="name" placeholder="Gold" />
-                </div>
+                <p class="bonus-panel__hint">Укажите название уровня выше — бонус станет доступен для добавления в акцию.</p>
 
                 <div class="bonus-status" id="vip_club_level-bonus-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
@@ -817,6 +862,224 @@
               </div>
             </div>
 
+            <!-- Настройки обкатки -->
+            <div class="section-content hidden" id="section-wagering">
+              <h3 class="bonus-panel__title">Настройки обкатки</h3>
+              <p class="bonus-panel__hint">Задайте условия учёта ставок для отыгрыша бонуса. Сохранённая обкатка станет доступна для привязки к бонусам и акциям.</p>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-name">Название</label>
+                <input class="form-input wagering-field" id="wagering-name" type="text" data-wagering-field="name" placeholder="Например, Стандартная спортивная обкатка" />
+              </div>
+
+              <hr class="section-divider" />
+              <h4 class="wagering-subsection__title">Общие фильтры ставок</h4>
+
+              <div class="form-block">
+                <span class="form-label">Тип счёта, с которого была совершена ставка</span>
+                <div class="checkbox-group" data-wagering-checkbox="accountTypes">
+                  <label class="checkbox-group__item"><input type="checkbox" value="any" /> Любой</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="real" checked /> Реальный</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="bonus" /> Бонусный</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="freebet" /> Фрибет</label>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-status">Статус</label>
+                <select class="form-select wagering-field" id="wagering-status" data-wagering-field="status">
+                  <option value="accepted">Принятые</option>
+                  <option value="settled">Рассчитанные</option>
+                </select>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-betCount">Количество ставок по условиям</label>
+                <input class="form-input wagering-field" id="wagering-betCount" type="number" min="1" step="1" data-wagering-field="betCount" placeholder="Не задано" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-minBetAmount">Минимальная сумма ставки</label>
+                <input class="form-input wagering-field" id="wagering-minBetAmount" type="number" min="0" step="0.01" data-wagering-field="minBetAmount" placeholder="Не задано" />
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Тип ставки</span>
+                <div class="checkbox-group" data-wagering-checkbox="betTypes">
+                  <label class="checkbox-group__item"><input type="checkbox" value="any" checked /> Любой</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="ordinary" /> Ординар</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="express" /> Экспресс</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="system" /> Система</label>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-minOdds">Минимальный коэффициент ставки</label>
+                <input class="form-input wagering-field" id="wagering-minOdds" type="number" min="1" step="0.01" data-wagering-field="minOdds" placeholder="Не задано" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-maxOdds">Максимальный коэффициент ставки</label>
+                <input class="form-input wagering-field" id="wagering-maxOdds" type="number" min="1" step="0.01" data-wagering-field="maxOdds" placeholder="Не задано" />
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Результат расчёта (исход)</span>
+                <div class="checkbox-group" data-wagering-checkbox="settlementOutcomes">
+                  <label class="checkbox-group__item"><input type="checkbox" value="any" checked /> Любой</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="win" /> Выигрыш</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="loss" /> Проигрыш</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="halfwin" /> Halfwin</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="halflose" /> Halflose</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="refund" /> Возврат</label>
+                </div>
+              </div>
+
+              <div class="form-block wagering-field--settled-only hidden" id="wagering-settled-first-block">
+                <label class="form-label" for="wagering-considerFirstSettlementOnly">Учитывать только первый расчёт</label>
+                <select class="form-select wagering-field" id="wagering-considerFirstSettlementOnly" data-wagering-field="considerFirstSettlementOnly">
+                  <option value="no">Нет</option>
+                  <option value="yes">Да</option>
+                </select>
+              </div>
+
+              <div class="form-block wagering-field--settled-only hidden" id="wagering-settled-refund-block">
+                <label class="form-label" for="wagering-considerBetRefund">Учитывать ли возврат ставки</label>
+                <select class="form-select wagering-field" id="wagering-considerBetRefund" data-wagering-field="considerBetRefund">
+                  <option value="no">Нет</option>
+                  <option value="yes">Да</option>
+                </select>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-considerCashedOutBets">Учитывать ли ставки с выкупом</label>
+                <select class="form-select wagering-field" id="wagering-considerCashedOutBets" data-wagering-field="considerCashedOutBets">
+                  <option value="yes">Да</option>
+                  <option value="no">Нет</option>
+                </select>
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Состояние события в момент ставки</span>
+                <div class="checkbox-group" data-wagering-checkbox="eventStateAtBet">
+                  <label class="checkbox-group__item"><input type="checkbox" value="any" checked /> Любое</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="live" /> Лайв</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="prematch" /> Прематч</label>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Платформа создания ставки</span>
+                <div class="checkbox-group" data-wagering-checkbox="betCreationPlatforms">
+                  <label class="checkbox-group__item"><input type="checkbox" value="any" checked /> Любая</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="mobsite" /> mobsite</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="ios" /> ios</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="android" /> android</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="desktop" /> desktop</label>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Источник ставки</span>
+                <div class="checkbox-group" data-wagering-checkbox="betSources">
+                  <label class="checkbox-group__item"><input type="checkbox" value="real_balance" checked /> Реальный баланс</label>
+                  <label class="checkbox-group__item checkbox-group__item--disabled"><input type="checkbox" value="bonus_balance" disabled /> Бонусный баланс</label>
+                  <label class="checkbox-group__item checkbox-group__item--disabled"><input type="checkbox" value="free_spins" disabled /> Фриспины</label>
+                </div>
+                <p class="form-hint">Бонусный баланс и фриспины пока недоступны для выбора.</p>
+              </div>
+
+              <hr class="section-divider" />
+              <h4 class="wagering-subsection__title">Спорт</h4>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-allowedSportsEntities">Допустимые виды спорта / категории / турниры / события</label>
+                <textarea class="form-input form-textarea wagering-field" id="wagering-allowedSportsEntities" rows="2" data-wagering-field="allowedSportsEntities" placeholder="ID через запятую, например: 1, 42, 105"></textarea>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-allowedMarketsCompetitors">Допустимые маркеты / компетиторы</label>
+                <textarea class="form-input form-textarea wagering-field" id="wagering-allowedMarketsCompetitors" rows="2" data-wagering-field="allowedMarketsCompetitors" placeholder="ID через запятую"></textarea>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-sportBetMultiplier">Мультипликатор ставок на спорт</label>
+                <input class="form-input wagering-field" id="wagering-sportBetMultiplier" type="number" min="0" step="0.01" data-wagering-field="sportBetMultiplier" value="1" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-sportSettlementResult">Результат расчёта (спорт)</label>
+                <select class="form-select wagering-field" id="wagering-sportSettlementResult" data-wagering-field="sportSettlementResult">
+                  <option value="any">Любой</option>
+                  <option value="win">Выигрыш</option>
+                  <option value="loss">Проигрыш</option>
+                </select>
+              </div>
+
+              <hr class="section-divider" />
+              <h4 class="wagering-subsection__title">Казино</h4>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-casinoGameCategories">Категории игр / игры</label>
+                <textarea class="form-input form-textarea wagering-field" id="wagering-casinoGameCategories" rows="2" data-wagering-field="casinoGameCategories" placeholder="ID категорий или игр через запятую"></textarea>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-casinoExceptionCategories">Список категорий исключений в казино</label>
+                <textarea class="form-input form-textarea wagering-field" id="wagering-casinoExceptionCategories" rows="2" data-wagering-field="casinoExceptionCategories" placeholder="Allcrash, crushmainpage, crushgames"></textarea>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-casinoExceptionGames">Список игр исключений в казино</label>
+                <textarea class="form-input form-textarea wagering-field" id="wagering-casinoExceptionGames" rows="2" data-wagering-field="casinoExceptionGames" placeholder="ID игр через запятую"></textarea>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-casinoBetMultiplier">Мультипликатор ставок в казино</label>
+                <input class="form-input wagering-field" id="wagering-casinoBetMultiplier" type="number" min="0" step="0.01" data-wagering-field="casinoBetMultiplier" value="1" />
+              </div>
+
+              <hr class="section-divider" />
+              <h4 class="wagering-subsection__title">Логика обкатки</h4>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-displayInGift">Отображение в «подарочке»</label>
+                <select class="form-select wagering-field" id="wagering-displayInGift" data-wagering-field="displayInGift">
+                  <option value="yes">Да</option>
+                  <option value="no">Нет</option>
+                </select>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-wageringSteps">Количество и доля шагов обкатки</label>
+                <input class="form-input wagering-field" id="wagering-wageringSteps" type="text" data-wagering-field="wageringSteps" value="1.0000" placeholder='["1.0000"] или 0.5, 0.5' />
+                <p class="form-hint">Массив долей шагов; сумма элементов должна быть равна 1. По умолчанию — одна ступень: 1.0000.</p>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-winningsWageringMultiplier">Кратность обкатки выигрыша</label>
+                <input class="form-input wagering-field" id="wagering-winningsWageringMultiplier" type="number" min="0" step="1" data-wagering-field="winningsWageringMultiplier" placeholder="30" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-winningsWageringPeriodHours">Срок обкатки выигрыша (часы)</label>
+                <input class="form-input wagering-field" id="wagering-winningsWageringPeriodHours" type="number" min="0" step="1" data-wagering-field="winningsWageringPeriodHours" placeholder="72" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="wagering-bonusClaimTimeLimitHours">Время на забор бонуса после начисления (часы)</label>
+                <input class="form-input wagering-field" id="wagering-bonusClaimTimeLimitHours" type="number" min="0" step="1" data-wagering-field="bonusClaimTimeLimitHours" placeholder="24" />
+              </div>
+
+              <div class="bonus-status" id="wagering-status-block">
+                <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                <span class="bonus-status__text">Не готова к использованию</span>
+              </div>
+              <button class="btn btn--primary btn--full" type="button" id="btn-save-wagering" disabled>
+                Сохранить настройки обкатки
+              </button>
+            </div>
+
             <!-- VIP Club -->
             <div class="section-content hidden" id="section-vip">
               <h3 class="bonus-panel__title">Программа VIP Club</h3>
@@ -824,50 +1087,11 @@
 
               <hr class="section-divider" />
 
-              <h3 class="bonus-panel__title">Справочник уровней</h3>
-              <p class="bonus-panel__hint">ID уровня используется в пакетах наград.</p>
-              <div id="vip-tier-editor"></div>
-
-              <hr class="section-divider" />
-
-              <h3 class="bonus-panel__title">Правила получения уровня</h3>
-              <p class="bonus-panel__hint">Минимальный порог за период оценки. Игроку присваивается максимальный уровень, чей порог выполнен.</p>
+              <h3 class="bonus-panel__title">Настройка уровней</h3>
+              <p class="bonus-panel__hint">Для каждого уровня задайте название, критерий (за депозит или за дроп), порог достижения, LVL-up бонус и шаг начисления наград между уровнями.</p>
               <div id="vip-progression-editor" class="vip-progression-editor"></div>
 
-              <hr class="section-divider" />
-
               <button class="btn btn--primary btn--full" type="button" id="btn-save-vip-tiers">Сохранить VIP Club</button>
-            </div>
-
-            <!-- Пакеты наград -->
-            <div class="section-content hidden" id="section-package">
-              <div class="form-block">
-                <label class="form-label" for="package-name">Название пакета</label>
-                <input class="form-input" id="package-name" type="text" placeholder="VIP Club — еженедельный пакет" />
-              </div>
-              <div class="form-block">
-                <label class="form-label" for="package-loyalty-program">Программа лояльности</label>
-                <select class="form-select" id="package-loyalty-program">
-                  <option value="vip_club">VIP Club</option>
-                </select>
-              </div>
-              <div class="form-block">
-                <label class="form-label" for="package-schedule">Период расчёта / выплаты</label>
-                <select class="form-select" id="package-schedule">
-                  <option value="day">День</option>
-                  <option value="week" selected>Неделя</option>
-                  <option value="month">Месяц</option>
-                </select>
-              </div>
-              <p class="bonus-panel__hint">Для каждого уровня VIP добавьте строки наград: кэшбэк, FS, reload.</p>
-              <div id="package-tier-editor" class="package-tier-editor"></div>
-              <div class="bonus-status" id="package-status">
-                <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
-                <span class="bonus-status__text">Заполните пакет для всех уровней</span>
-              </div>
-              <button class="btn btn--primary btn--full" type="button" id="btn-save-package" disabled>
-                Сохранить пакет
-              </button>
             </div>
 
             <!-- Настройка триггера -->
