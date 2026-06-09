@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PL Admin Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__logo">
+        <span class="sidebar__logo-icon">PL</span>
+        <span class="sidebar__logo-text">Admin Platform</span>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="#" class="nav-item">
+          <span class="nav-item__icon">🎲</span>
+          <span>Казино</span>
+          <span class="nav-item__chevron">›</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-item__icon">⚽</span>
+          <span>Беттинг</span>
+          <span class="nav-item__chevron">›</span>
+        </a>
+
+        <div class="nav-group nav-group--open">
+          <button class="nav-item nav-item--active" type="button">
+            <span class="nav-item__icon">🥕</span>
+            <span>Керрот</span>
+            <span class="nav-item__chevron nav-item__chevron--down">›</span>
+          </button>
+          <div class="nav-group__sub">
+            <a href="#" class="nav-sub">Сценарии</a>
+            <a href="#" class="nav-sub">Пользователи</a>
+            <a href="#" class="nav-sub">Промокоды</a>
+            <a href="#" class="nav-sub">Турниры</a>
+            <div class="nav-group nav-group--open nav-group--nested">
+              <button class="nav-sub nav-sub--active nav-sub--parent" type="button">
+                Акции
+                <span class="nav-item__chevron nav-item__chevron--down">›</span>
+              </button>
+              <div class="nav-group__sub nav-group__sub--nested">
+                <a href="#" class="nav-sub nav-sub--nested nav-sub--active" data-page-section="list">Список</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="promo">Настройка акции</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="bonus">Настройка бонуса</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="trigger">Настройка триггера</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="vip">VIP Club</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="package">Пакеты наград</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="#" class="nav-item">
+          <span class="nav-item__icon">⚙</span>
+          <span>Настройки</span>
+          <span class="nav-item__chevron">›</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-item__icon">✓</span>
+          <span>Администраторы</span>
+          <span class="nav-item__chevron">›</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-item__icon">💡</span>
+          <span>Оповещения</span>
+          <span class="nav-item__chevron">›</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-item__icon">🕐</span>
+          <span>Журнал действий</span>
+          <span class="nav-item__chevron">›</span>
+        </a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar__left">
+          <button class="icon-btn" type="button" aria-label="Меню">☰</button>
+          <nav class="breadcrumbs">
+            <span class="breadcrumbs__home">⌂</span>
+            <span class="breadcrumbs__sep">›</span>
+            <span>Керрот</span>
+            <span class="breadcrumbs__sep">›</span>
+            <span class="breadcrumbs__current" id="breadcrumb-current">Акции</span>
+          </nav>
+        </div>
+        <div class="topbar__right">
+          <span class="topbar__user">Oleg Mangol</span>
+          <button class="icon-btn" type="button">🌐</button>
+          <button class="icon-btn" type="button">&lt;/&gt;</button>
+          <button class="icon-btn" type="button">⚙</button>
+          <button class="icon-btn" type="button">⛶</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="table-panel" id="table-panel">
+          <h1 class="page-title" id="page-title">Акции</h1>
+
+          <div class="toolbar" id="toolbar-promo">
+            <div class="search">
+              <span class="search__icon">🔍</span>
+              <input type="search" id="search-promo" placeholder="Поиск по ID, названию или дате" />
+            </div>
+            <div class="filters">
+              <button class="filter-tab filter-tab--active" type="button">Все</button>
+              <button class="filter-tab" type="button">Draft</button>
+              <button class="filter-tab" type="button">Active</button>
+              <button class="filter-tab" type="button">Canceled</button>
+              <button class="filter-tab" type="button">Completed</button>
+            </div>
+            <button class="btn btn--primary" type="button" id="btn-add-promo">
+              <span>+</span> Добавить акцию
+            </button>
+          </div>
+
+          <div class="toolbar hidden" id="toolbar-bonus">
+            <div class="search">
+              <span class="search__icon">🔍</span>
+              <input type="search" id="search-bonus" placeholder="Поиск по ID, типу или сумме" />
+            </div>
+            <div class="filters" id="bonus-filters">
+              <button class="filter-tab filter-tab--active" type="button" data-bonus-filter="all">Все</button>
+              <button class="filter-tab" type="button" data-bonus-filter="cash">Денежный</button>
+              <button class="filter-tab" type="button" data-bonus-filter="fs">FS</button>
+              <button class="filter-tab" type="button" data-bonus-filter="fb">FB</button>
+              <button class="filter-tab" type="button" data-bonus-filter="vip_club_level">VIP Club</button>
+              <button class="filter-tab" type="button" data-bonus-filter="wheel_spin">Колесо фортуны</button>
+              <button class="filter-tab" type="button" data-bonus-filter="ready">Готов</button>
+              <button class="filter-tab" type="button" data-bonus-filter="draft">Черновик</button>
+            </div>
+            <button class="btn btn--primary" type="button" id="btn-add-bonus">
+              <span>+</span> Добавить бонус
+            </button>
+          </div>
+
+          <div class="toolbar hidden" id="toolbar-trigger">
+            <div class="search">
+              <span class="search__icon">🔍</span>
+              <input type="search" id="search-trigger" placeholder="Поиск по ID или типу" />
+            </div>
+            <div class="filters" id="trigger-filters">
+              <button class="filter-tab filter-tab--active" type="button" data-trigger-filter="all">Все</button>
+              <button class="filter-tab" type="button" data-trigger-filter="registration">Регистрация</button>
+              <button class="filter-tab" type="button" data-trigger-filter="subscription">Подписка</button>
+              <button class="filter-tab" type="button" data-trigger-filter="tg_subscription">Подписка на TG</button>
+              <button class="filter-tab" type="button" data-trigger-filter="pwa_download">Скачивание PWA</button>
+              <button class="filter-tab" type="button" data-trigger-filter="deposit">Депозит</button>
+              <button class="filter-tab" type="button" data-trigger-filter="bet">Ставка</button>
+              <button class="filter-tab" type="button" data-trigger-filter="ready">Готов</button>
+              <button class="filter-tab" type="button" data-trigger-filter="draft">Черновик</button>
+            </div>
+            <button class="btn btn--primary" type="button" id="btn-add-trigger-config">
+              <span>+</span> Добавить триггер
+            </button>
+          </div>
+
+          <div class="toolbar hidden" id="toolbar-vip">
+            <p class="toolbar__hint">Уровни VIP Club — используются в пакетах наград для привязки параметров по tier.</p>
+            <button class="btn btn--primary" type="button" id="btn-add-vip-tier">
+              <span>+</span> Добавить уровень
+            </button>
+          </div>
+
+          <div class="toolbar hidden" id="toolbar-package">
+            <div class="search">
+              <span class="search__icon">🔍</span>
+              <input type="search" id="search-package" placeholder="Поиск по названию" />
+            </div>
+            <button class="btn btn--primary" type="button" id="btn-add-package">
+              <span>+</span> Добавить пакет
+            </button>
+          </div>
+
+          <div class="table-wrap" id="table-promo">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID <span class="sort">↕</span></th>
+                  <th>Название <span class="sort">↕</span></th>
+                  <th>Тип <span class="sort">↕</span></th>
+                  <th>Дата создания <span class="sort">↕</span></th>
+                  <th>Дата начала <span class="sort">↕</span></th>
+                  <th>Дата конца <span class="sort">↕</span></th>
+                  <th>Статус <span class="sort">↕</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="promotions-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Графовый редактор сценария акции — Marketing Layer -->
+          <div class="graph-workspace hidden" id="graph-workspace">
+
+            <div class="graph-workspace__header">
+              <div class="graph-workspace__actions">
+                <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-trigger">
+                  <span class="graph-btn-dot graph-btn-dot--trigger" aria-hidden="true"></span>Триггер
+                </button>
+                <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-bonus-node">
+                  <span class="graph-btn-dot graph-btn-dot--bonus" aria-hidden="true"></span>Награда
+                </button>
+                <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-package-node">
+                  <span class="graph-btn-dot graph-btn-dot--package" aria-hidden="true"></span>Пакет наград
+                </button>
+              </div>
+            </div>
+
+            <div class="graph-workspace__body">
+              <div class="graph-canvas-wrap" id="graph-canvas-wrap">
+                <div class="graph-canvas" id="graph-canvas">
+                  <div class="graph-canvas__grid"></div>
+                  <svg class="graph-edges" id="graph-edges" aria-hidden="true"></svg>
+                  <div class="graph-nodes" id="graph-nodes"></div>
+                </div>
+
+                <div class="graph-connect-hint hidden" id="graph-connect-hint">
+                  Кликните по входу целевой ноды
+                </div>
+
+                <div class="graph-controls">
+                  <div class="graph-minimap" id="graph-minimap" aria-hidden="true">
+                    <div class="graph-minimap__viewport" id="graph-minimap-viewport"></div>
+                  </div>
+                  <div class="graph-zoom">
+                    <button class="graph-zoom__btn" type="button" id="graph-zoom-out" aria-label="Уменьшить">−</button>
+                    <span class="graph-zoom__label" id="graph-zoom-label">100%</span>
+                    <button class="graph-zoom__btn" type="button" id="graph-zoom-in" aria-label="Увеличить">+</button>
+                    <button class="graph-zoom__btn graph-zoom__btn--fit" type="button" id="graph-zoom-fit" title="По размеру экрана">⊡</button>
+                  </div>
+                </div>
+              </div><!-- /graph-canvas-wrap -->
+
+            </div><!-- /graph-workspace__body -->
+          </div>
+
+          <div class="table-wrap hidden" id="table-bonus">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID <span class="sort">↕</span></th>
+                  <th>Тип <span class="sort">↕</span></th>
+                  <th>Размер <span class="sort">↕</span></th>
+                  <th>Валюта <span class="sort">↕</span></th>
+                  <th>Дата создания <span class="sort">↕</span></th>
+                  <th>Статус <span class="sort">↕</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="bonuses-tbody"></tbody>
+            </table>
+            <p class="table-empty hidden" id="bonuses-empty">Нет бонусов. Нажмите «Добавить бонус», чтобы создать первый.</p>
+          </div>
+
+          <div class="table-wrap hidden" id="table-trigger">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID <span class="sort">↕</span></th>
+                  <th>Тип <span class="sort">↕</span></th>
+                  <th>Краткое описание <span class="sort">↕</span></th>
+                  <th>Дата создания <span class="sort">↕</span></th>
+                  <th>Статус <span class="sort">↕</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="triggers-tbody"></tbody>
+            </table>
+            <p class="table-empty hidden" id="triggers-empty">Нет триггеров. Нажмите «Добавить триггер», чтобы создать первый.</p>
+          </div>
+
+          <div class="table-wrap hidden" id="table-vip">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID уровня</th>
+                  <th>Название</th>
+                  <th>Критерий</th>
+                  <th>Порог</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="vip-tiers-tbody"></tbody>
+            </table>
+            <p class="table-empty hidden" id="vip-tiers-empty">Нет уровней. Добавьте первый уровень VIP Club.</p>
+          </div>
+
+          <div class="table-wrap hidden" id="table-package">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Название</th>
+                  <th>Программа</th>
+                  <th>Наград (всего)</th>
+                  <th>Статус</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="packages-tbody"></tbody>
+            </table>
+            <p class="table-empty hidden" id="packages-empty">Нет пакетов. Создайте пакет наград для VIP Club.</p>
+          </div>
+        </section>
+
+        <aside class="edit-panel hidden" id="edit-panel">
+          <div class="edit-panel__empty" id="panel-empty">
+            <div class="edit-panel__empty-icon">🖥</div>
+            <p class="edit-panel__empty-title">Панель редактирования</p>
+            <p class="edit-panel__empty-text">Выбери элемент в таблице для его редактирования</p>
+          </div>
+
+          <div class="edit-panel__content hidden" id="panel-content">
+            <h2 class="edit-panel__title" id="panel-heading">Редактирование</h2>
+
+            <!-- Настройка акции -->
+            <div class="section-content" id="section-promo">
+              <!-- Общие настройки акции -->
+              <div id="promo-panel-general">
+                <div class="form-block">
+                  <label class="form-label" for="promo-name">Название акции</label>
+                  <input class="form-input" id="promo-name" type="text" placeholder="Название акции" />
+                </div>
+
+                <div class="form-block" id="promo-kind-block">
+                  <span class="form-label">Тип акции</span>
+                  <div class="bonus-type-tabs" id="promo-kind-tabs">
+                    <button class="bonus-type-tab" type="button" data-promo-kind="quest">Квест</button>
+                    <button class="bonus-type-tab" type="button" data-promo-kind="bonus">Бонус</button>
+                    <button class="bonus-type-tab" type="button" data-promo-kind="loyalty">Программа лояльности</button>
+                    <button class="bonus-type-tab" type="button" data-promo-kind="tournaments">Турниры</button>
+                    <button class="bonus-type-tab" type="button" data-promo-kind="raffles">Рафлы</button>
+                  </div>
+                </div>
+
+                <div class="form-block hidden" id="promo-loyalty-block">
+                  <label class="form-label" for="promo-loyalty-program">Программа лояльности</label>
+                  <select class="form-select" id="promo-loyalty-program">
+                    <option value="">Не выбрана</option>
+                    <option value="vip_club">VIP Club</option>
+                  </select>
+                  <p class="form-hint">Для акций с пакетом наград по уровням VIP.</p>
+                </div>
+
+                <div class="form-block">
+                  <span class="form-label">Срок действия</span>
+                  <div class="datetime-group">
+                    <span class="datetime-group__label">Начало</span>
+                    <div class="datetime-row">
+                      <input class="form-input" id="promo-start-date" type="text" placeholder="ДД.ММ.ГГГГ" />
+                      <input class="form-input" id="promo-start-time" type="text" placeholder="ЧЧ:ММ:СС" />
+                    </div>
+                  </div>
+                  <div class="datetime-group">
+                    <span class="datetime-group__label">Конец</span>
+                    <div class="datetime-row">
+                      <input class="form-input" id="promo-end-date" type="text" placeholder="ДД.ММ.ГГГГ" />
+                      <input class="form-input" id="promo-end-time" type="text" placeholder="ЧЧ:ММ:СС" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-block">
+                  <div class="form-block__header">
+                    <span class="form-label">Добавление пользователей</span>
+                    <button class="link-btn" type="button" id="btn-upload-users-csv">☁ Загрузить CSV</button>
+                  </div>
+                  <ul class="user-list" id="user-list"></ul>
+                  <input
+                    class="form-input user-id-input"
+                    id="promo-user-id-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="ID пользователя"
+                    autocomplete="off"
+                  />
+                  <button
+                    class="btn btn--outline btn--full"
+                    type="button"
+                    id="btn-add-user"
+                    onclick="window.addPromoUserFromInput && window.addPromoUserFromInput()"
+                  >
+                    + Добавить
+                  </button>
+                  <input class="hidden" id="promo-users-csv-input" type="file" accept=".csv,text/csv" />
+                </div>
+
+                <p class="form-hint graph-panel-hint">Кликните по ноде на схеме, чтобы настроить триггер или бонус.</p>
+              </div>
+
+              <!-- Свойства выбранной ноды: Триггер -->
+              <div class="hidden" id="promo-panel-trigger">
+                <p class="graph-node-panel__badge graph-node-panel__badge--trigger">Триггер</p>
+                <div id="promo-trigger-picker">
+                  <div class="form-block">
+                    <label class="form-label" for="graph-trigger-select">Триггер</label>
+                    <select class="form-select" id="graph-trigger-select" disabled>
+                      <option value="">Сначала настройте триггер</option>
+                    </select>
+                  <p class="form-hint" id="graph-trigger-hint">Доступны сохранённые триггеры: регистрация, подписка, подписка на TG, скачивание PWA, депозит, ставка.</p>
+                  </div>
+                  <div class="form-block">
+                    <button class="btn btn--primary btn--full" type="button" id="btn-promo-create-trigger">
+                      + Создать новый триггер
+                    </button>
+                  </div>
+                </div>
+                <div class="form-block" id="promo-trigger-label-block">
+                  <label class="form-label" for="trigger-label">Подпись на схеме</label>
+                  <input class="form-input" id="trigger-label" type="text" placeholder="Триггер" />
+                  <p class="form-hint">Два выхода: «выполнен» — триггер сработал в срок, «не выполнен» — время истекло. От каждого можно вести свою цепочку.</p>
+                </div>
+              </div>
+
+              <!-- Свойства выбранной ноды: Награда -->
+              <div class="hidden" id="promo-panel-bonus-node">
+                <p class="graph-node-panel__badge graph-node-panel__badge--bonus">Награда</p>
+                <div class="form-block">
+                  <label class="form-label" for="graph-bonus-select">Бонус</label>
+                  <select class="form-select" id="graph-bonus-select" disabled>
+                    <option value="">Сначала настройте бонус</option>
+                  </select>
+                  <p class="form-hint" id="graph-bonus-hint">Доступны сохранённые бонусы: денежный, FS, FB, кэшбэк.</p>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="bonus-node-label">Подпись на схеме</label>
+                  <input class="form-input" id="bonus-node-label" type="text" placeholder="Награда" />
+                </div>
+              </div>
+
+              <!-- Свойства выбранной ноды: Пакет наград -->
+              <div class="hidden" id="promo-panel-package-node">
+                <p class="graph-node-panel__badge graph-node-panel__badge--package">Пакет наград</p>
+                <div class="form-block">
+                  <label class="form-label" for="graph-package-select">Пакет</label>
+                  <select class="form-select" id="graph-package-select" disabled>
+                    <option value="">Сначала создайте пакет</option>
+                  </select>
+                  <p class="form-hint" id="graph-package-hint">Пакет задаёт набор наград (кэшбэк, FS, reload) для каждого уровня VIP.</p>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="package-node-label">Подпись на схеме</label>
+                  <input class="form-input" id="package-node-label" type="text" placeholder="Пакет VIP" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Настройка бонуса -->
+            <div class="section-content hidden" id="section-bonus">
+              <div class="form-block">
+                <span class="form-label">Формула начисления</span>
+                <div class="bonus-formula-tabs" id="bonus-formula-tabs">
+                  <button class="bonus-formula-tab bonus-formula-tab--active" type="button" data-bonus-formula="fixed">Фиксированная сумма</button>
+                  <button class="bonus-formula-tab" type="button" data-bonus-formula="percent_deposit">% от депозита</button>
+                  <button class="bonus-formula-tab" type="button" data-bonus-formula="percent_bets">% от ставок</button>
+                </div>
+                <p class="form-hint" id="bonus-formula-hint">
+                  Фиксированный размер награды. В акции триггер (например, депозит) определяет, когда выдать бонус.
+                </p>
+              </div>
+
+              <div class="form-block" id="bonus-type-block">
+                <span class="form-label">Тип бонуса</span>
+                <div class="bonus-type-tabs" id="bonus-type-tabs">
+                  <button class="bonus-type-tab" type="button" data-bonus-type="fs">FS</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="fb">FB</button>
+                  <button class="bonus-type-tab bonus-type-tab--active" type="button" data-bonus-type="cash">Денежный</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="cashback">Кэшбэк</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="reload">Релоад</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="vip_club_level">VIP Club</button>
+                  <button class="bonus-type-tab" type="button" data-bonus-type="wheel_spin">Спин колеса фортуны</button>
+                </div>
+              </div>
+
+              <!-- Колесо фортуны -->
+              <div class="bonus-type-panel hidden" id="bonus-panel-wheel_spin">
+                <h3 class="bonus-panel__title">Wheel of Fortune (spin)</h3>
+                <p class="bonus-panel__hint">
+                  Укажите количество выдаваемых спинов и настройки бонусов, которые могут выпасть в рамках спина.
+                </p>
+
+                <div class="form-block">
+                  <label class="form-label" for="wheel-spin-count">Количество спинов</label>
+                  <input
+                    class="form-input wheel-spin-field"
+                    id="wheel-spin-count"
+                    type="number"
+                    min="1"
+                    step="1"
+                    data-field="spinsCount"
+                    placeholder="1"
+                  />
+                </div>
+
+                <div class="form-block">
+                  <label class="form-label" for="wheel-spin-bonuses">Бонусы в спине (JSON)</label>
+                  <textarea
+                    class="form-input wheel-spin-field"
+                    id="wheel-spin-bonuses"
+                    rows="10"
+                    data-field="spinBonusesJson"
+                    placeholder='[{"kind":"cash","currencyId":123,"amount":10},{"kind":"fs","currencyId":123,"amount":20}]'
+                  ></textarea>
+                  <p class="form-hint">
+                    Формат: массив объектов. Минимум поля <code>kind</code>. Допустимые <code>kind</code>:
+                    <code>cash</code>, <code>fs</code>, <code>fb</code>, <code>cashback</code>, <code>reload</code>,
+                    <code>vip_club_level</code>.
+                  </p>
+                </div>
+
+                <div class="bonus-status" id="wheel_spin-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-wheel_spin-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+
+              <!-- Денежный бонус -->
+              <div class="bonus-type-panel" id="bonus-panel-cash">
+                <h3 class="bonus-panel__title">Bonus settings</h3>
+                <p class="bonus-panel__hint">Заполните все поля — бонус станет доступен для добавления в акцию.</p>
+
+                <div class="form-block">
+                  <label class="form-label" for="cash-currencyId">currencyId</label>
+                  <input class="form-input cash-field" id="cash-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                </div>
+                <div class="form-block cash-formula-field cash-formula-field--fixed" id="cash-amount-block">
+                  <label class="form-label" for="cash-amount">amount (фиксированная сумма)</label>
+                  <input class="form-input cash-field" id="cash-amount" type="number" data-field="amount" placeholder="10" />
+                </div>
+                <div class="form-block cash-formula-field cash-formula-field--percent hidden" id="cash-percent-block">
+                  <label class="form-label" for="cash-percent">Процент, %</label>
+                  <input class="form-input cash-field" id="cash-percent" type="number" data-field="percent" min="0" max="100" step="0.1" placeholder="10" />
+                </div>
+                <div class="form-block cash-formula-field cash-formula-field--percent hidden" id="cash-max-payout-block">
+                  <label class="form-label" for="cash-maxPayout">Макс. выплата (опционально)</label>
+                  <input class="form-input cash-field" id="cash-maxPayout" type="number" data-field="maxPayout" placeholder="500" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-expiration">freebetExpirationPediodInHours</label>
+                  <input class="form-input cash-field" id="cash-expiration" type="number" data-field="freebetExpirationPediodInHours" placeholder="120" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-type">type (option)</label>
+                  <select class="form-select cash-field" id="cash-type" data-field="type">
+                    <option value="">Где можно использовать фрибет?</option>
+                    <option value="sport">Спорт</option>
+                    <option value="casino">Казино</option>
+                    <option value="all">Везде</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-allowedBetTypes">allowedBetTypes</label>
+                  <select class="form-select cash-field" id="cash-allowedBetTypes" data-field="allowedBetTypes">
+                    <option value="">Выберите тип ставки</option>
+                    <option value="ordinary">ordinary</option>
+                    <option value="express">express</option>
+                    <option value="all">all</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-minBetRate">minBetRate</label>
+                  <input class="form-input cash-field" id="cash-minBetRate" type="number" step="0.1" data-field="minBetRate" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-maxBetRate">maxBetRate</label>
+                  <input class="form-input cash-field" id="cash-maxBetRate" type="number" step="0.1" data-field="maxBetRate" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-minBetRateExpress">minBetRateExpress</label>
+                  <input class="form-input cash-field" id="cash-minBetRateExpress" type="number" step="0.1" data-field="minBetRateExpress" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-maxBetRateExpress">maxBetRateExpress</label>
+                  <input class="form-input cash-field" id="cash-maxBetRateExpress" type="number" step="0.1" data-field="maxBetRateExpress" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-minBetRateOrdinary">minBetRateOrdinary</label>
+                  <input class="form-input cash-field" id="cash-minBetRateOrdinary" type="number" step="0.1" data-field="minBetRateOrdinary" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cash-maxBetRateOrdinary">maxBetRateOrdinary</label>
+                  <input class="form-input cash-field" id="cash-maxBetRateOrdinary" type="number" step="0.1" data-field="maxBetRateOrdinary" placeholder="100" />
+                </div>
+
+                <div class="bonus-status" id="cash-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-cash-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+
+              <!-- FS -->
+              <div class="bonus-type-panel hidden" id="bonus-panel-fs">
+                <h3 class="bonus-panel__title">Bonus settings (FS)</h3>
+                <p class="bonus-panel__hint">Заполните все поля — бонус станет доступен для добавления в акцию.</p>
+
+                <div class="form-block">
+                  <label class="form-label" for="fs-currencyId">currencyId</label>
+                  <input class="form-input fs-field" id="fs-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-amount">amount</label>
+                  <input class="form-input fs-field" id="fs-amount" type="number" data-field="amount" placeholder="10" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-expiration">freebetExpirationPediodInHours</label>
+                  <input class="form-input fs-field" id="fs-expiration" type="number" data-field="freebetExpirationPediodInHours" placeholder="120" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-type">type (option)</label>
+                  <select class="form-select fs-field" id="fs-type" data-field="type">
+                    <option value="">Где можно использовать фрибет?</option>
+                    <option value="sport">Спорт</option>
+                    <option value="casino">Казино</option>
+                    <option value="all">Везде</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-allowedBetTypes">allowedBetTypes</label>
+                  <select class="form-select fs-field" id="fs-allowedBetTypes" data-field="allowedBetTypes">
+                    <option value="">Выберите тип ставки</option>
+                    <option value="ordinary">ordinary</option>
+                    <option value="express">express</option>
+                    <option value="all">all</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-minBetRate">minBetRate</label>
+                  <input class="form-input fs-field" id="fs-minBetRate" type="number" step="0.1" data-field="minBetRate" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-maxBetRate">maxBetRate</label>
+                  <input class="form-input fs-field" id="fs-maxBetRate" type="number" step="0.1" data-field="maxBetRate" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-minBetRateExpress">minBetRateExpress</label>
+                  <input class="form-input fs-field" id="fs-minBetRateExpress" type="number" step="0.1" data-field="minBetRateExpress" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-maxBetRateExpress">maxBetRateExpress</label>
+                  <input class="form-input fs-field" id="fs-maxBetRateExpress" type="number" step="0.1" data-field="maxBetRateExpress" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-minBetRateOrdinary">minBetRateOrdinary</label>
+                  <input class="form-input fs-field" id="fs-minBetRateOrdinary" type="number" step="0.1" data-field="minBetRateOrdinary" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-maxBetRateOrdinary">maxBetRateOrdinary</label>
+                  <input class="form-input fs-field" id="fs-maxBetRateOrdinary" type="number" step="0.1" data-field="maxBetRateOrdinary" placeholder="100" />
+                </div>
+
+                <div class="bonus-status" id="fs-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-fs-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+
+              <!-- FB -->
+              <div class="bonus-type-panel hidden" id="bonus-panel-fb">
+                <h3 class="bonus-panel__title">Bonus settings (FB)</h3>
+                <p class="bonus-panel__hint">Заполните все поля — бонус станет доступен для добавления в акцию.</p>
+
+                <div class="form-block">
+                  <label class="form-label" for="fb-currencyId">currencyId</label>
+                  <input class="form-input fb-field" id="fb-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-amount">amount</label>
+                  <input class="form-input fb-field" id="fb-amount" type="number" data-field="amount" placeholder="10" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-expiration">freebetExpirationPediodInHours</label>
+                  <input class="form-input fb-field" id="fb-expiration" type="number" data-field="freebetExpirationPediodInHours" placeholder="120" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-type">type (option)</label>
+                  <select class="form-select fb-field" id="fb-type" data-field="type">
+                    <option value="">Где можно использовать фрибет?</option>
+                    <option value="sport">Спорт</option>
+                    <option value="casino">Казино</option>
+                    <option value="all">Везде</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-allowedBetTypes">allowedBetTypes</label>
+                  <select class="form-select fb-field" id="fb-allowedBetTypes" data-field="allowedBetTypes">
+                    <option value="">Выберите тип ставки</option>
+                    <option value="ordinary">ordinary</option>
+                    <option value="express">express</option>
+                    <option value="all">all</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-minBetRate">minBetRate</label>
+                  <input class="form-input fb-field" id="fb-minBetRate" type="number" step="0.1" data-field="minBetRate" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-maxBetRate">maxBetRate</label>
+                  <input class="form-input fb-field" id="fb-maxBetRate" type="number" step="0.1" data-field="maxBetRate" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-minBetRateExpress">minBetRateExpress</label>
+                  <input class="form-input fb-field" id="fb-minBetRateExpress" type="number" step="0.1" data-field="minBetRateExpress" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-maxBetRateExpress">maxBetRateExpress</label>
+                  <input class="form-input fb-field" id="fb-maxBetRateExpress" type="number" step="0.1" data-field="maxBetRateExpress" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-minBetRateOrdinary">minBetRateOrdinary</label>
+                  <input class="form-input fb-field" id="fb-minBetRateOrdinary" type="number" step="0.1" data-field="minBetRateOrdinary" placeholder="0.1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fb-maxBetRateOrdinary">maxBetRateOrdinary</label>
+                  <input class="form-input fb-field" id="fb-maxBetRateOrdinary" type="number" step="0.1" data-field="maxBetRateOrdinary" placeholder="100" />
+                </div>
+
+                <div class="bonus-status" id="fb-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-fb-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+              <div class="bonus-type-panel hidden" id="bonus-panel-cashback">
+                <h3 class="bonus-panel__title">Bonus settings (Кэшбэк)</h3>
+                <p class="bonus-panel__hint">Кэшбэк обычно считается как процент от ставок. Заполните поля — бонус станет доступен в акции.</p>
+
+                <div class="form-block">
+                  <label class="form-label" for="cashback-currencyId">currencyId</label>
+                  <input class="form-input cashback-field" id="cashback-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cashback-percent">Процент, %</label>
+                  <input class="form-input cashback-field" id="cashback-percent" type="number" data-field="percent" min="0" max="100" step="0.1" placeholder="10" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cashback-maxPayout">Макс. выплата</label>
+                  <input class="form-input cashback-field" id="cashback-maxPayout" type="number" data-field="maxPayout" placeholder="500" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="cashback-period">Период расчёта</label>
+                  <select class="form-select cashback-field" id="cashback-period" data-field="calculationPeriod">
+                    <option value="">Выберите период</option>
+                    <option value="day">День</option>
+                    <option value="week">Неделя</option>
+                    <option value="month">Месяц</option>
+                  </select>
+                </div>
+
+                <div class="bonus-status" id="cashback-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-cashback-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+              <div class="bonus-type-panel hidden" id="bonus-panel-reload">
+                <h3 class="bonus-panel__title">Bonus settings (Reload)</h3>
+                <p class="bonus-panel__hint">Релоад — процент от депозита. Выберите формулу «% от депозита» выше.</p>
+                <div class="form-block">
+                  <label class="form-label" for="reload-currencyId">currencyId</label>
+                  <input class="form-input reload-field" id="reload-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="reload-percent">Процент, %</label>
+                  <input class="form-input reload-field" id="reload-percent" type="number" data-field="percent" min="0" max="100" step="0.1" placeholder="50" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="reload-maxPayout">Макс. выплата (опционально)</label>
+                  <input class="form-input reload-field" id="reload-maxPayout" type="number" data-field="maxPayout" placeholder="1000" />
+                </div>
+                <div class="bonus-status" id="reload-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-reload-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="bonus-panel-vip_club_level">
+                <h3 class="bonus-panel__title">VIP Club level</h3>
+                <p class="bonus-panel__hint">Укажите название уровня — бонус станет доступен для добавления в акцию.</p>
+
+                <div class="form-block">
+                  <label class="form-label" for="vip_club_level-name">Название</label>
+                  <input class="form-input vip-club-level-field" id="vip_club_level-name" type="text" data-field="name" placeholder="Gold" />
+                </div>
+
+                <div class="bonus-status" id="vip_club_level-bonus-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-vip_club_level-bonus" disabled>
+                  Сохранить настройки бонуса
+                </button>
+              </div>
+            </div>
+
+            <!-- VIP Club -->
+            <div class="section-content hidden" id="section-vip">
+              <h3 class="bonus-panel__title">Программа VIP Club</h3>
+              <p class="bonus-panel__hint">Здесь задаётся, как игрок получает и удерживает уровень. Акции только выдают награды по уже присвоенному уровню.</p>
+
+              <hr class="section-divider" />
+
+              <h3 class="bonus-panel__title">Справочник уровней</h3>
+              <p class="bonus-panel__hint">ID уровня используется в пакетах наград.</p>
+              <div id="vip-tier-editor"></div>
+
+              <hr class="section-divider" />
+
+              <h3 class="bonus-panel__title">Правила получения уровня</h3>
+              <p class="bonus-panel__hint">Минимальный порог за период оценки. Игроку присваивается максимальный уровень, чей порог выполнен.</p>
+              <div id="vip-progression-editor" class="vip-progression-editor"></div>
+
+              <hr class="section-divider" />
+
+              <button class="btn btn--primary btn--full" type="button" id="btn-save-vip-tiers">Сохранить VIP Club</button>
+            </div>
+
+            <!-- Пакеты наград -->
+            <div class="section-content hidden" id="section-package">
+              <div class="form-block">
+                <label class="form-label" for="package-name">Название пакета</label>
+                <input class="form-input" id="package-name" type="text" placeholder="VIP Club — еженедельный пакет" />
+              </div>
+              <div class="form-block">
+                <label class="form-label" for="package-loyalty-program">Программа лояльности</label>
+                <select class="form-select" id="package-loyalty-program">
+                  <option value="vip_club">VIP Club</option>
+                </select>
+              </div>
+              <div class="form-block">
+                <label class="form-label" for="package-schedule">Период расчёта / выплаты</label>
+                <select class="form-select" id="package-schedule">
+                  <option value="day">День</option>
+                  <option value="week" selected>Неделя</option>
+                  <option value="month">Месяц</option>
+                </select>
+              </div>
+              <p class="bonus-panel__hint">Для каждого уровня VIP добавьте строки наград: кэшбэк, FS, reload.</p>
+              <div id="package-tier-editor" class="package-tier-editor"></div>
+              <div class="bonus-status" id="package-status">
+                <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                <span class="bonus-status__text">Заполните пакет для всех уровней</span>
+              </div>
+              <button class="btn btn--primary btn--full" type="button" id="btn-save-package" disabled>
+                Сохранить пакет
+              </button>
+            </div>
+
+            <!-- Настройка триггера -->
+            <div class="section-content hidden" id="section-trigger">
+              <div class="hidden promo-inline-trigger-bar" id="promo-inline-trigger-bar">
+                <button class="btn btn--ghost btn--sm" type="button" id="btn-promo-trigger-create-back">
+                  ← К выбору триггера
+                </button>
+                <p class="form-hint promo-inline-trigger-bar__hint">
+                  Новый триггер будет сохранён и сразу привязан к ноде на схеме.
+                </p>
+              </div>
+              <div class="form-block">
+                <span class="form-label">Тип триггера</span>
+                <div class="trigger-type-tabs" id="trigger-type-tabs">
+                  <button class="trigger-type-tab trigger-type-tab--active" type="button" data-trigger-type="registration">Регистрация</button>
+                  <button class="trigger-type-tab" type="button" data-trigger-type="subscription">Подписка</button>
+                  <button class="trigger-type-tab" type="button" data-trigger-type="tg_subscription">Подписка на TG</button>
+                  <button class="trigger-type-tab" type="button" data-trigger-type="pwa_download">Скачивание PWA</button>
+                  <button class="trigger-type-tab" type="button" data-trigger-type="deposit">Депозит</button>
+                  <button class="trigger-type-tab" type="button" data-trigger-type="bet">Ставка</button>
+                </div>
+              </div>
+
+              <div class="bonus-type-panel" id="trigger-panel-registration">
+                <h3 class="trigger-panel__title">Trigger settings (Регистрация)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="reg-allowedCountries">allowedCountries</label>
+                  <input class="form-input registration-field" id="reg-allowedCountries" type="text" data-field="allowedCountries" placeholder="RU,KZ,BY" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="reg-requireEmailVerified">requireEmailVerified</label>
+                  <select class="form-select registration-field" id="reg-requireEmailVerified" data-field="requireEmailVerified">
+                    <option value="">Выберите</option>
+                    <option value="yes">Да</option>
+                    <option value="no">Нет</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="reg-minAge">minAge</label>
+                  <input class="form-input registration-field" id="reg-minAge" type="number" data-field="minAge" placeholder="18" />
+                </div>
+                <div class="bonus-status" id="registration-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-registration-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="trigger-panel-subscription">
+                <h3 class="trigger-panel__title">Trigger settings (Подписка)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="sub-planId">planId</label>
+                  <input class="form-input subscription-field" id="sub-planId" type="text" data-field="planId" placeholder="premium_monthly" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="sub-channel">channel</label>
+                  <select class="form-select subscription-field" id="sub-channel" data-field="channel">
+                    <option value="">Выберите канал</option>
+                    <option value="email">Email</option>
+                    <option value="push">Push</option>
+                    <option value="sms">SMS</option>
+                    <option value="all">Все</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="sub-renewalOnly">renewalOnly</label>
+                  <select class="form-select subscription-field" id="sub-renewalOnly" data-field="renewalOnly">
+                    <option value="">Выберите</option>
+                    <option value="yes">Только продление</option>
+                    <option value="no">Новая подписка</option>
+                  </select>
+                </div>
+                <div class="bonus-status" id="subscription-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-subscription-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="trigger-panel-tg_subscription">
+                <h3 class="trigger-panel__title">Trigger settings (Подписка на TG)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="tg-botUsername">botUsername</label>
+                  <input class="form-input tg-subscription-field" id="tg-botUsername" type="text" data-field="botUsername" placeholder="my_bot" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="tg-target">target</label>
+                  <select class="form-select tg-subscription-field" id="tg-target" data-field="target">
+                    <option value="">Выберите</option>
+                    <option value="channel">Канал</option>
+                    <option value="group">Группа</option>
+                    <option value="bot">Бот</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="tg-targetId">targetId</label>
+                  <input class="form-input tg-subscription-field" id="tg-targetId" type="text" data-field="targetId" placeholder="@my_channel или -1001234567890" />
+                </div>
+                <div class="bonus-status" id="tg_subscription-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-tg_subscription-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="trigger-panel-pwa_download">
+                <h3 class="trigger-panel__title">Trigger settings (Скачивание PWA)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="pwa-platform">platform</label>
+                  <select class="form-select pwa-download-field" id="pwa-platform" data-field="platform">
+                    <option value="">Выберите платформу</option>
+                    <option value="android">Android</option>
+                    <option value="ios">iOS</option>
+                    <option value="desktop">Desktop</option>
+                    <option value="any">Любая</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="pwa-installType">installType</label>
+                  <select class="form-select pwa-download-field" id="pwa-installType" data-field="installType">
+                    <option value="">Выберите</option>
+                    <option value="install">Установка</option>
+                    <option value="add_to_home">Add to Home Screen</option>
+                    <option value="any">Любой</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="pwa-versionMin">versionMin</label>
+                  <input class="form-input pwa-download-field" id="pwa-versionMin" type="text" data-field="versionMin" placeholder="1.0.0" />
+                </div>
+                <div class="bonus-status" id="pwa_download-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-pwa_download-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="trigger-panel-deposit">
+                <h3 class="trigger-panel__title">Trigger settings (Депозит)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="dep-minAmount">minAmount</label>
+                  <input class="form-input deposit-field" id="dep-minAmount" type="number" data-field="minAmount" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-currencyId">currencyId</label>
+                  <input class="form-input deposit-field" id="dep-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-minDepositNumber">minDepositNumber</label>
+                  <input class="form-input deposit-field" id="dep-minDepositNumber" type="number" data-field="minDepositNumber" placeholder="1" />
+                </div>
+                <div class="bonus-status" id="deposit-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-deposit-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="trigger-panel-bet">
+                <h3 class="trigger-panel__title">Trigger settings (Ставка)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="bet-minAmount">minAmount</label>
+                  <input class="form-input bet-field" id="bet-minAmount" type="number" data-field="minAmount" placeholder="50" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="bet-minOdds">minOdds</label>
+                  <input class="form-input bet-field" id="bet-minOdds" type="number" step="0.1" data-field="minOdds" placeholder="1.5" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="bet-allowedBetTypes">allowedBetTypes</label>
+                  <select class="form-select bet-field" id="bet-allowedBetTypes" data-field="allowedBetTypes">
+                    <option value="">Выберите тип ставки</option>
+                    <option value="ordinary">ordinary</option>
+                    <option value="express">express</option>
+                    <option value="all">all</option>
+                  </select>
+                </div>
+                <div class="bonus-status" id="bet-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-bet-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+            </div>
+
+            <div class="edit-panel__actions">
+              <button class="btn btn--ghost" type="button" id="btn-cancel">Отмена</button>
+              <button class="btn btn--primary" type="button" id="btn-save-promo">Сохранить</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="graph-editor.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
