@@ -574,6 +574,7 @@ let activeBonusFormula = 'fixed';
 
 const TRIGGER_TYPE_LABELS = {
   registration: 'Регистрация',
+  identification: 'Прохождение идентификации',
   tg_subscription: 'Подписка на TG',
   pwa_download: 'Скачивание PWA',
   deposit: 'Депозит',
@@ -582,6 +583,7 @@ const TRIGGER_TYPE_LABELS = {
 
 const CONFIGURED_TRIGGER_TYPES = [
   'registration',
+  'identification',
   'tg_subscription',
   'pwa_download',
   'deposit',
@@ -593,6 +595,7 @@ const TRIGGER_OPTIONAL_FIELDS = [TRIGGER_TIMEOUT_FIELD];
 
 const TRIGGER_CONFIG_FIELDS = {
   registration: ['name'],
+  identification: ['name'],
   tg_subscription: ['botUsername', 'target', 'targetId', TRIGGER_TIMEOUT_FIELD],
   pwa_download: ['platform', 'installType', 'versionMin', TRIGGER_TIMEOUT_FIELD],
   deposit: [], // см. getDepositTriggerConfigFields()
@@ -602,6 +605,7 @@ const TRIGGER_CONFIG_FIELDS = {
 const triggerTypeTabs = document.querySelectorAll('[data-trigger-type]');
 const triggerPanels = {
   registration: document.getElementById('trigger-panel-registration'),
+  identification: document.getElementById('trigger-panel-identification'),
   tg_subscription: document.getElementById('trigger-panel-tg_subscription'),
   pwa_download: document.getElementById('trigger-panel-pwa_download'),
   deposit: document.getElementById('trigger-panel-deposit'),
@@ -609,6 +613,7 @@ const triggerPanels = {
 };
 
 const registrationFields = document.querySelectorAll('.registration-field');
+const identificationFields = document.querySelectorAll('.identification-field');
 const tgSubscriptionFields = document.querySelectorAll('.tg-subscription-field');
 const pwaDownloadFields = document.querySelectorAll('.pwa-download-field');
 const depositFields = document.querySelectorAll('.deposit-field');
@@ -2702,6 +2707,7 @@ function switchTriggerType(type) {
 
 function getTriggerFields(type) {
   if (type === 'registration') return registrationFields;
+  if (type === 'identification') return identificationFields;
   if (type === 'tg_subscription') return tgSubscriptionFields;
   if (type === 'pwa_download') return pwaDownloadFields;
   if (type === 'deposit') return depositFields;
@@ -2835,7 +2841,7 @@ function buildTriggerFromForm(type, data, id, createdAt) {
     base.minAmount = Number(data.minAmount);
     base.minOdds = Number(data.minOdds);
   }
-  if (type !== 'registration') {
+  if (type !== 'registration' && type !== 'identification') {
     if (data.timeoutHours !== '') {
       base.timeoutHours = Number(data.timeoutHours);
     } else {
@@ -2883,7 +2889,7 @@ function withTriggerTimeout(summary, trigger) {
 
 function formatTriggerSummary(trigger) {
   const type = trigger.triggerType;
-  if (type === 'registration') return trigger.name || '—';
+  if (type === 'registration' || type === 'identification') return trigger.name || '—';
   if (type === 'tg_subscription') {
     const target = trigger.target ? `${trigger.target}: ` : '';
     return withTriggerTimeout(`${target}${trigger.targetId || '—'}`, trigger);

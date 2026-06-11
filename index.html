@@ -150,6 +150,7 @@
             <div class="filters" id="trigger-filters">
               <button class="filter-tab filter-tab--active" type="button" data-trigger-filter="all">Все</button>
               <button class="filter-tab" type="button" data-trigger-filter="registration">Регистрация</button>
+              <button class="filter-tab" type="button" data-trigger-filter="identification">Идентификация</button>
               <button class="filter-tab" type="button" data-trigger-filter="tg_subscription">Подписка на TG</button>
               <button class="filter-tab" type="button" data-trigger-filter="pwa_download">Скачивание PWA</button>
               <button class="filter-tab" type="button" data-trigger-filter="deposit">Депозит</button>
@@ -401,7 +402,7 @@
                     <select class="form-select" id="graph-trigger-select" disabled>
                       <option value="">Сначала настройте триггер</option>
                     </select>
-                  <p class="form-hint" id="graph-trigger-hint">Доступны сохранённые триггеры: регистрация, подписка, подписка на TG, скачивание PWA, депозит, ставка.</p>
+                  <p class="form-hint" id="graph-trigger-hint">Доступны сохранённые триггеры: регистрация, прохождение идентификации, подписка на TG, скачивание PWA, депозит, ставка.</p>
                   <p class="form-hint hidden" id="deposit-trigger-promo-hint"></p>
                   </div>
                   <div class="form-block">
@@ -1100,6 +1101,7 @@
                 <span class="form-label">Тип триггера</span>
                 <div class="trigger-type-tabs" id="trigger-type-tabs">
                   <button class="trigger-type-tab trigger-type-tab--active" type="button" data-trigger-type="registration">Регистрация</button>
+                  <button class="trigger-type-tab" type="button" data-trigger-type="identification">Прохождение идентификации</button>
                   <button class="trigger-type-tab" type="button" data-trigger-type="tg_subscription">Подписка на TG</button>
                   <button class="trigger-type-tab" type="button" data-trigger-type="pwa_download">Скачивание PWA</button>
                   <button class="trigger-type-tab" type="button" data-trigger-type="deposit">Депозит</button>
@@ -1119,6 +1121,22 @@
                   <span class="bonus-status__text">Не готов к добавлению в акцию</span>
                 </div>
                 <button class="btn btn--primary btn--full" type="button" id="btn-save-registration-trigger" disabled>
+                  Сохранить настройки триггера
+                </button>
+              </div>
+
+              <div class="bonus-type-panel hidden" id="trigger-panel-identification">
+                <h3 class="trigger-panel__title">Trigger settings (Прохождение идентификации)</h3>
+                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <div class="form-block">
+                  <label class="form-label" for="id-name">Название</label>
+                  <input class="form-input identification-field" id="id-name" type="text" data-field="name" placeholder="Название триггера" />
+                </div>
+                <div class="bonus-status" id="identification-trigger-status">
+                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
+                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
+                </div>
+                <button class="btn btn--primary btn--full" type="button" id="btn-save-identification-trigger" disabled>
                   Сохранить настройки триггера
                 </button>
               </div>

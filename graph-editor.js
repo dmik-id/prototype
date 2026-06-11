@@ -35,6 +35,7 @@ const GraphEditor = (() => {
 
   const TRIGGER_TYPE_LABELS = {
     registration: 'Регистрация',
+    identification: 'Прохождение идентификации',
     tg_subscription: 'Подписка на TG',
     pwa_download: 'Скачивание PWA',
     deposit: 'Депозит',
@@ -429,7 +430,9 @@ const GraphEditor = (() => {
     if (!trigger) return `Триггер #${triggerId}`;
     const typeLabel = TRIGGER_TYPE_LABELS[trigger.triggerType] || trigger.triggerType;
     const timer =
-      trigger.triggerType === 'registration' ? '' : triggerTimeoutPart(trigger);
+      trigger.triggerType === 'registration' || trigger.triggerType === 'identification'
+        ? ''
+        : triggerTimeoutPart(trigger);
     if (trigger.triggerType === 'deposit') {
       return `${typeLabel} #${trigger.id} · ${depositTriggerShort(trigger)}${timer}`;
     }
@@ -585,7 +588,14 @@ const GraphEditor = (() => {
             </div>`;
         const outputPorts = isEnd
           ? ''
-          : isStart || !isRewardOut
+          : isStart
+          ? `<div class="graph-node__ports-out">
+              <div class="graph-port-row graph-port-row--end">
+                <span class="graph-port-label">выполнен</span>
+                <span class="graph-port graph-port--end ${connectingFrom === node.id && connectingFromPort === 'end' ? 'is-connecting' : ''}" data-port="end" title="Выполнен — начните линию"></span>
+              </div>
+            </div>`
+          : !isRewardOut
           ? `<div class="graph-node__ports-out">
               <div class="graph-port-row graph-port-row--end">
                 <span class="graph-port-label">end</span>

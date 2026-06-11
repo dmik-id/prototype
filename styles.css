@@ -1998,6 +1998,10 @@ body {
   min-width: 0;
 }
 
+.graph-node--start .graph-node__ports {
+  justify-content: flex-end;
+}
+
 .graph-node--trigger .graph-port-row--end {
   padding: 2px 4px;
   white-space: nowrap;
