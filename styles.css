@@ -564,6 +564,10 @@ body {
   margin-bottom: 10px;
 }
 
+.form-label--optional {
+  color: #9ca3af;
+}
+
 .form-label {
   display: block;
   font-size: 13px;

@@ -34,7 +34,6 @@ const GraphEditor = (() => {
 
   const TRIGGER_TYPE_LABELS = {
     registration: 'Регистрация',
-    subscription: 'Подписка',
     tg_subscription: 'Подписка на TG',
     pwa_download: 'Скачивание PWA',
     deposit: 'Депозит',

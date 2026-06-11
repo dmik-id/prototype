@@ -307,6 +307,42 @@ const ATOMIC_BONUS_TYPES = ['cash', 'fs', 'fb', 'bonus_game'];
 
 const BONUS_GAME_CONFIG_FIELDS = ['gameId', 'roundsCount', 'expirationInHours'];
 
+const FS_CONFIG_FIELDS = [
+  'freespinCurrencyId',
+  'winningsCurrencyId',
+  'gameSelectionPeriodInHours',
+  'spinPeriodInHours',
+  'freespinCount',
+  'freespinAmount',
+  'maxWinnings',
+  'freespinType',
+  'casinoGameIds',
+  'allowedPlayerWeights',
+  'excludeTags',
+  'instantWinnings',
+  'skksBonusType',
+  'awardReason',
+  'level',
+  'validityPeriod',
+];
+
+const FS_NUMERIC_CONFIG_FIELDS = [
+  'freespinCurrencyId',
+  'winningsCurrencyId',
+  'gameSelectionPeriodInHours',
+  'spinPeriodInHours',
+  'freespinCount',
+  'freespinAmount',
+  'maxWinnings',
+  'level',
+  'validityPeriod',
+];
+
+const BONUS_NAME_LABELS = {
+  fs: 'Название фриспин-программы для отображения в админке',
+  default: 'Название',
+};
+
 const BONUS_KIND_LABELS = {
   atomic: 'Атомарный',
   package: 'Пакет',
@@ -363,17 +399,22 @@ const SEED_BONUSES = [
     createdAt: '01.06.26 - 10:00:00',
     status: 'ready',
     name: 'Стартовые FS',
-    currencyId: 123,
-    amount: 20,
-    freebetExpirationPediodInHours: 72,
-    type: 'casino',
-    allowedBetTypes: 'all',
-    minBetRate: 0,
-    maxBetRate: 100,
-    minBetRateExpress: 0,
-    maxBetRateExpress: 100,
-    minBetRateOrdinary: 0,
-    maxBetRateOrdinary: 100,
+    freespinCurrencyId: 123,
+    winningsCurrencyId: 123,
+    gameSelectionPeriodInHours: 24,
+    spinPeriodInHours: 72,
+    freespinCount: 20,
+    freespinAmount: 100,
+    maxWinnings: 5000,
+    freespinType: 'fixed_count',
+    casinoGameIds: '101, 202',
+    allowedPlayerWeights: '1, 2, 3',
+    excludeTags: '',
+    instantWinnings: 'yes',
+    skksBonusType: 'freespin',
+    awardReason: 'welcome_bonus',
+    level: 1,
+    validityPeriod: 168,
   },
   {
     id: 3,
@@ -484,6 +525,7 @@ const cashbackFields = document.querySelectorAll('.cashback-field');
 const reloadFields = document.querySelectorAll('.reload-field');
 const vipClubLevelFields = document.querySelectorAll('.vip-club-level-field');
 const bonusNameInput = document.getElementById('bonus-name');
+const bonusNameLabel = document.getElementById('bonus-name-label');
 const bonusWageringSettings = document.getElementById('bonus-wagering-settings');
 const bonusWageringBlock = document.getElementById('bonus-wagering-block');
 const bonusWageringSelectBlock = document.getElementById('bonus-wagering-select-block');
@@ -528,7 +570,6 @@ let activeBonusFormula = 'fixed';
 
 const TRIGGER_TYPE_LABELS = {
   registration: 'Регистрация',
-  subscription: 'Подписка',
   tg_subscription: 'Подписка на TG',
   pwa_download: 'Скачивание PWA',
   deposit: 'Депозит',
@@ -537,7 +578,6 @@ const TRIGGER_TYPE_LABELS = {
 
 const CONFIGURED_TRIGGER_TYPES = [
   'registration',
-  'subscription',
   'tg_subscription',
   'pwa_download',
   'deposit',
@@ -545,18 +585,27 @@ const CONFIGURED_TRIGGER_TYPES = [
 ];
 
 const TRIGGER_CONFIG_FIELDS = {
-  registration: ['allowedCountries', 'requireEmailVerified', 'minAge'],
-  subscription: ['planId', 'channel', 'renewalOnly'],
+  registration: ['name'],
   tg_subscription: ['botUsername', 'target', 'targetId'],
   pwa_download: ['platform', 'installType', 'versionMin'],
-  deposit: ['minAmount', 'currencyId', 'minDepositNumber'],
+  deposit: [
+    'availableWeights',
+    'prohibitingTags',
+    'maxDepositAmount',
+    'minDepositAmount',
+    'depositMultiplier',
+    'amount',
+    'currencyId',
+    'depositType',
+    'depositCount',
+    'accountingDepth',
+  ],
   bet: ['minAmount', 'minOdds', 'allowedBetTypes'],
 };
 
 const triggerTypeTabs = document.querySelectorAll('.trigger-type-tab');
 const triggerPanels = {
   registration: document.getElementById('trigger-panel-registration'),
-  subscription: document.getElementById('trigger-panel-subscription'),
   tg_subscription: document.getElementById('trigger-panel-tg_subscription'),
   pwa_download: document.getElementById('trigger-panel-pwa_download'),
   deposit: document.getElementById('trigger-panel-deposit'),
@@ -564,7 +613,6 @@ const triggerPanels = {
 };
 
 const registrationFields = document.querySelectorAll('.registration-field');
-const subscriptionFields = document.querySelectorAll('.subscription-field');
 const tgSubscriptionFields = document.querySelectorAll('.tg-subscription-field');
 const pwaDownloadFields = document.querySelectorAll('.pwa-download-field');
 const depositFields = document.querySelectorAll('.deposit-field');
@@ -1905,6 +1953,9 @@ function switchBonusType(type) {
   Object.entries(bonusPanels).forEach(([key, panel]) => {
     panel?.classList.toggle('hidden', key !== type);
   });
+  if (bonusNameLabel) {
+    bonusNameLabel.textContent = BONUS_NAME_LABELS[type] || BONUS_NAME_LABELS.default;
+  }
   if (type === 'bonus_pack') {
     switchBonusPackSubtype(activeBonusPackType);
   }
@@ -1947,7 +1998,8 @@ function getBonusTypeConfigFields(type) {
     if (activeBonusPackType === 'lootbox') return ['pool'];
     if (activeBonusPackType === 'simple') return ['bonuses'];
   }
-  if (type === 'fs' || type === 'fb') {
+  if (type === 'fs') return FS_CONFIG_FIELDS;
+  if (type === 'fb') {
     return [
       'currencyId',
       'amount',
@@ -2224,6 +2276,7 @@ function isBonusConfigComplete(type, data = getBonusFormData(type)) {
   return fields.every((key) => {
     const val = data[key];
     if (key === 'maxPayout' && (val === '' || val === undefined)) return true;
+    if (key === 'excludeTags' && (val === '' || val === undefined)) return true;
     if (val === '' || val === undefined) return false;
     if (
       [
@@ -2235,9 +2288,13 @@ function isBonusConfigComplete(type, data = getBonusFormData(type)) {
         'gameId',
         'roundsCount',
         'expirationInHours',
+        ...FS_NUMERIC_CONFIG_FIELDS,
       ].includes(key)
     ) {
-      if (key === 'roundsCount') {
+      if (key === 'roundsCount' || key === 'freespinCount') {
+        return !Number.isNaN(Number(val)) && Number(val) >= 1;
+      }
+      if (key === 'level') {
         return !Number.isNaN(Number(val)) && Number(val) >= 1;
       }
       return !Number.isNaN(Number(val)) && Number(val) >= 0;
@@ -2343,6 +2400,36 @@ function buildBonusFromForm(type, data, id, createdAt) {
     );
   }
 
+  if (type === 'fs') {
+    return attachBonusWageringFields(
+      {
+        id,
+        bonusType: 'fs',
+        formula: 'fixed',
+        createdAt: createdAt || formatDate(),
+        status: 'ready',
+        name: data.name,
+        freespinCurrencyId: Number(data.freespinCurrencyId),
+        winningsCurrencyId: Number(data.winningsCurrencyId),
+        gameSelectionPeriodInHours: Number(data.gameSelectionPeriodInHours),
+        spinPeriodInHours: Number(data.spinPeriodInHours),
+        freespinCount: Number(data.freespinCount),
+        freespinAmount: Number(data.freespinAmount),
+        maxWinnings: Number(data.maxWinnings),
+        freespinType: data.freespinType,
+        casinoGameIds: data.casinoGameIds,
+        allowedPlayerWeights: data.allowedPlayerWeights,
+        excludeTags: data.excludeTags,
+        instantWinnings: data.instantWinnings,
+        skksBonusType: data.skksBonusType,
+        awardReason: data.awardReason,
+        level: Number(data.level),
+        validityPeriod: Number(data.validityPeriod),
+      },
+      data
+    );
+  }
+
   const formula = type === 'cash' ? normalizeCashFormula(activeBonusFormula) : 'fixed';
   const bonus = {
     id,
@@ -2443,6 +2530,9 @@ function formatBonusSize(bonus) {
     const game = bonus.gameId ?? '—';
     return `игра ${game} · ${rounds} раунд(ов)`;
   }
+  if (bonus.bonusType === 'fs') {
+    return `${bonus.freespinCount ?? '—'} FS`;
+  }
   return bonus.amount ?? '—';
 }
 
@@ -2456,12 +2546,14 @@ function formatBonusLabel(bonus) {
     bonus.bonusType === 'cash' && bonus.formula ? BONUS_FORMULA_LABELS[bonus.formula] : '';
   const size = formatBonusSize(bonus);
   const formulaPart = formulaLabel ? ` · ${formulaLabel}` : '';
+  const currencyId =
+    bonus.bonusType === 'fs' ? bonus.freespinCurrencyId : bonus.currencyId;
   const currencyPart =
     bonus.bonusType === 'vip_club_level' ||
     bonus.bonusType === 'bonus_game' ||
     isBonusPackType(bonus.bonusType)
       ? ''
-      : ` (валюта ${bonus.currencyId})`;
+      : ` (валюта ${currencyId})`;
   return `${typeLabel} #${bonus.id}${namePart} — ${size}${currencyPart}${formulaPart}`;
 }
 
@@ -2525,7 +2617,6 @@ function switchTriggerType(type) {
 
 function getTriggerFields(type) {
   if (type === 'registration') return registrationFields;
-  if (type === 'subscription') return subscriptionFields;
   if (type === 'tg_subscription') return tgSubscriptionFields;
   if (type === 'pwa_download') return pwaDownloadFields;
   if (type === 'deposit') return depositFields;
@@ -2562,13 +2653,43 @@ function getTriggerFormData(type) {
   return data;
 }
 
+const DEPOSIT_TRIGGER_OPTIONAL_FIELDS = ['availableWeights', 'prohibitingTags', 'maxDepositAmount'];
+
+const DEPOSIT_TRIGGER_NUMERIC_FIELDS = [
+  'maxDepositAmount',
+  'minDepositAmount',
+  'depositMultiplier',
+  'amount',
+  'currencyId',
+  'depositCount',
+  'accountingDepth',
+];
+
 function isTriggerConfigComplete(type, data = getTriggerFormData(type)) {
   const fields = TRIGGER_CONFIG_FIELDS[type] || [];
   return fields.every((key) => {
     const val = data[key];
+    if (type === 'deposit' && DEPOSIT_TRIGGER_OPTIONAL_FIELDS.includes(key)) {
+      if (val === '' || val === undefined) return true;
+    }
     if (val === '' || val === undefined) return false;
-    if (['minAge', 'minAmount', 'currencyId', 'minDepositNumber', 'minOdds'].includes(key)) {
+    if (['minAge', 'minAmount', 'currencyId', 'minOdds'].includes(key)) {
       return !Number.isNaN(Number(val)) && Number(val) >= 0;
+    }
+    if (type === 'deposit' && DEPOSIT_TRIGGER_NUMERIC_FIELDS.includes(key)) {
+      const num = Number(val);
+      if (Number.isNaN(num) || num < 0) return false;
+      if (key === 'depositMultiplier' && num > 100000) return false;
+      if (
+        ['maxDepositAmount', 'minDepositAmount', 'amount'].includes(key) &&
+        num > 1_000_000_000_000_000
+      ) {
+        return false;
+      }
+      if (['depositCount', 'accountingDepth'].includes(key)) {
+        return Number.isInteger(num) && num >= 1;
+      }
+      return true;
     }
     return true;
   });
@@ -2582,13 +2703,16 @@ function buildTriggerFromForm(type, data, id, createdAt) {
     status: 'ready',
     ...data,
   };
-  if (type === 'registration') {
-    base.minAge = Number(data.minAge);
-  }
   if (type === 'deposit') {
-    base.minAmount = Number(data.minAmount);
+    base.minDepositAmount = Number(data.minDepositAmount);
+    base.depositMultiplier = Number(data.depositMultiplier);
+    base.amount = Number(data.amount);
     base.currencyId = Number(data.currencyId);
-    base.minDepositNumber = Number(data.minDepositNumber);
+    base.depositCount = Number(data.depositCount);
+    base.accountingDepth = Number(data.accountingDepth);
+    if (data.maxDepositAmount !== '') {
+      base.maxDepositAmount = Number(data.maxDepositAmount);
+    }
   }
   if (type === 'bet') {
     base.minAmount = Number(data.minAmount);
@@ -2624,8 +2748,7 @@ function updateTriggerUI() {
 
 function formatTriggerSummary(trigger) {
   const type = trigger.triggerType;
-  if (type === 'registration') return trigger.allowedCountries || '—';
-  if (type === 'subscription') return trigger.planId || '—';
+  if (type === 'registration') return trigger.name || '—';
   if (type === 'tg_subscription') {
     const target = trigger.target ? `${trigger.target}: ` : '';
     return `${target}${trigger.targetId || '—'}`;
@@ -2637,7 +2760,11 @@ function formatTriggerSummary(trigger) {
     return `${platform} · ${installType}${ver}`;
   }
   if (type === 'deposit') {
-    return `от ${trigger.minAmount} (валюта ${trigger.currencyId})`;
+    const min = trigger.minDepositAmount ?? trigger.minAmount;
+    const currency = trigger.currencyId ?? '—';
+    const count = trigger.depositCount ?? trigger.minDepositNumber;
+    const countPart = count ? `, ${count} деп.` : '';
+    return `от ${min} (валюта ${currency})${countPart}`;
   }
   if (type === 'bet') {
     return `от ${trigger.minAmount}, кф. ${trigger.minOdds}`;
@@ -3115,7 +3242,14 @@ function renderBonusesTable() {
     const sizeText = hasConfig || isVipLevel || isPack ? formatBonusSize(bonus) : '—';
     const amountCell =
       bonus.name && !isVipLevel ? `${bonus.name} · ${sizeText}` : sizeText;
-    const currencyCell = isVipLevel || isPack ? '—' : hasConfig ? bonus.currencyId : '—';
+    const currencyCell =
+      isVipLevel || isPack
+        ? '—'
+        : hasConfig
+          ? bonus.bonusType === 'fs'
+            ? bonus.freespinCurrencyId
+            : bonus.currencyId
+          : '—';
     const typeCell = isPack
       ? `${BONUS_TYPE_LABELS.bonus_pack} · ${BONUS_PACK_TYPE_LABELS[getBonusPackType(bonus)] || '—'}`
       : BONUS_TYPE_LABELS[bonus.bonusType] || bonus.bonusType;

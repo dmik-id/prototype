@@ -150,7 +150,6 @@
             <div class="filters" id="trigger-filters">
               <button class="filter-tab filter-tab--active" type="button" data-trigger-filter="all">Все</button>
               <button class="filter-tab" type="button" data-trigger-filter="registration">Регистрация</button>
-              <button class="filter-tab" type="button" data-trigger-filter="subscription">Подписка</button>
               <button class="filter-tab" type="button" data-trigger-filter="tg_subscription">Подписка на TG</button>
               <button class="filter-tab" type="button" data-trigger-filter="pwa_download">Скачивание PWA</button>
               <button class="filter-tab" type="button" data-trigger-filter="deposit">Депозит</button>
@@ -326,19 +325,7 @@
                   <div class="bonus-type-tabs" id="promo-kind-tabs">
                     <button class="bonus-type-tab" type="button" data-promo-kind="quest">Квест</button>
                     <button class="bonus-type-tab" type="button" data-promo-kind="bonus">Бонус</button>
-                    <button class="bonus-type-tab" type="button" data-promo-kind="loyalty">Программа лояльности</button>
-                    <button class="bonus-type-tab" type="button" data-promo-kind="tournaments">Турниры</button>
-                    <button class="bonus-type-tab" type="button" data-promo-kind="raffles">Рафлы</button>
                   </div>
-                </div>
-
-                <div class="form-block hidden" id="promo-loyalty-block">
-                  <label class="form-label" for="promo-loyalty-program">Программа лояльности</label>
-                  <select class="form-select" id="promo-loyalty-program">
-                    <option value="">Не выбрана</option>
-                    <option value="vip_club">VIP Club</option>
-                  </select>
-                  <p class="form-hint">Для акций типа «Программа лояльности».</p>
                 </div>
 
                 <div class="form-block">
@@ -432,7 +419,7 @@
             <!-- Настройка бонуса -->
             <div class="section-content hidden" id="section-bonus">
               <div class="form-block" id="bonus-name-block">
-                <label class="form-label" for="bonus-name">Название</label>
+                <label class="form-label" for="bonus-name" id="bonus-name-label">Название</label>
                 <input
                   class="form-input"
                   id="bonus-name"
@@ -632,58 +619,86 @@
                 <p class="bonus-panel__hint">Заполните все поля — бонус станет доступен для добавления в акцию.</p>
 
                 <div class="form-block">
-                  <label class="form-label" for="fs-currencyId">currencyId</label>
-                  <input class="form-input fs-field" id="fs-currencyId" type="number" data-field="currencyId" placeholder="123" />
+                  <label class="form-label" for="fs-freespinCurrencyId">Идентификатор валюты начисления фриспинов в рамках фриспин-программы</label>
+                  <input class="form-input fs-field" id="fs-freespinCurrencyId" type="number" data-field="freespinCurrencyId" placeholder="123" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-amount">amount</label>
-                  <input class="form-input fs-field" id="fs-amount" type="number" data-field="amount" placeholder="10" />
+                  <label class="form-label" for="fs-winningsCurrencyId">Идентификатор валюты начисления выигрыша в рамках фриспин-программы</label>
+                  <input class="form-input fs-field" id="fs-winningsCurrencyId" type="number" data-field="winningsCurrencyId" placeholder="123" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-expiration">freebetExpirationPediodInHours</label>
-                  <input class="form-input fs-field" id="fs-expiration" type="number" data-field="freebetExpirationPediodInHours" placeholder="120" />
+                  <label class="form-label" for="fs-gameSelectionPeriodInHours">Срок выбора игры игроком для начисления фриспинов в часах</label>
+                  <input class="form-input fs-field" id="fs-gameSelectionPeriodInHours" type="number" data-field="gameSelectionPeriodInHours" placeholder="24" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-type">type (option)</label>
-                  <select class="form-select fs-field" id="fs-type" data-field="type">
-                    <option value="">Где можно использовать фрибет?</option>
-                    <option value="sport">Спорт</option>
-                    <option value="casino">Казино</option>
-                    <option value="all">Везде</option>
+                  <label class="form-label" for="fs-spinPeriodInHours">Срок прокрутки начисленных фриспинов в выбранной игре в часах</label>
+                  <input class="form-input fs-field" id="fs-spinPeriodInHours" type="number" data-field="spinPeriodInHours" placeholder="72" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-freespinCount">Количество начисляемых фриспинов</label>
+                  <input class="form-input fs-field" id="fs-freespinCount" type="number" min="1" step="1" data-field="freespinCount" placeholder="20" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-freespinAmount">Сумма начисляемых фриспинов</label>
+                  <input class="form-input fs-field" id="fs-freespinAmount" type="number" step="0.01" data-field="freespinAmount" placeholder="100" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-maxWinnings">Максимальный выигрыш по фриспинам (в валюте начисления фриспинов)</label>
+                  <input class="form-input fs-field" id="fs-maxWinnings" type="number" step="0.01" data-field="maxWinnings" placeholder="5000" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-freespinType">Тип фриспина</label>
+                  <select class="form-select fs-field" id="fs-freespinType" data-field="freespinType">
+                    <option value="">Выберите тип фриспина</option>
+                    <option value="fixed_count">Фиксированное количество</option>
+                    <option value="fixed_amount">Фиксированная сумма</option>
                   </select>
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-allowedBetTypes">allowedBetTypes</label>
-                  <select class="form-select fs-field" id="fs-allowedBetTypes" data-field="allowedBetTypes">
-                    <option value="">Выберите тип ставки</option>
-                    <option value="ordinary">ordinary</option>
-                    <option value="express">express</option>
-                    <option value="all">all</option>
+                  <label class="form-label" for="fs-casinoGameIds">Идентификаторы игр казино</label>
+                  <textarea class="form-input form-textarea fs-field" id="fs-casinoGameIds" data-field="casinoGameIds" placeholder="101, 202, 303"></textarea>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-allowedPlayerWeights">Допустимые веса игроков</label>
+                  <input class="form-input fs-field" id="fs-allowedPlayerWeights" type="text" data-field="allowedPlayerWeights" placeholder="1, 2, 3" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="fs-excludeTags">Теги, при наличии которых игрок будет исключен из фриспин-программы</label>
+                  <textarea class="form-input form-textarea fs-field" id="fs-excludeTags" data-field="excludeTags" placeholder="fraud, self_excluded"></textarea>
+                </div>
+
+                <hr class="section-divider" />
+                <h4 class="wagering-subsection__title">Начисление выигрыша</h4>
+
+                <div class="form-block">
+                  <label class="form-label" for="fs-instantWinnings">Моментальное начисление выигрыша</label>
+                  <select class="form-select fs-field" id="fs-instantWinnings" data-field="instantWinnings">
+                    <option value="">Выберите вариант</option>
+                    <option value="yes">Да</option>
+                    <option value="no">Нет</option>
                   </select>
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-minBetRate">minBetRate</label>
-                  <input class="form-input fs-field" id="fs-minBetRate" type="number" step="0.1" data-field="minBetRate" placeholder="0.1" />
+                  <label class="form-label" for="fs-skksBonusType">Тип бонуса СККС</label>
+                  <input class="form-input fs-field" id="fs-skksBonusType" type="text" data-field="skksBonusType" placeholder="Тип бонуса" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-maxBetRate">maxBetRate</label>
-                  <input class="form-input fs-field" id="fs-maxBetRate" type="number" step="0.1" data-field="maxBetRate" placeholder="100" />
+                  <label class="form-label" for="fs-awardReason">Причина начисления</label>
+                  <input class="form-input fs-field" id="fs-awardReason" type="text" data-field="awardReason" placeholder="Причина начисления" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-minBetRateExpress">minBetRateExpress</label>
-                  <input class="form-input fs-field" id="fs-minBetRateExpress" type="number" step="0.1" data-field="minBetRateExpress" placeholder="0.1" />
+                  <label class="form-label form-label--optional" for="fs-promoActionId">Идентификатор промо-акции</label>
+                  <input class="form-input fs-field" id="fs-promoActionId" type="number" data-field="promoActionId" placeholder="Заполняется автоматически" disabled />
+                  <p class="form-hint">Поле заполняется при привязке к акции.</p>
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-maxBetRateExpress">maxBetRateExpress</label>
-                  <input class="form-input fs-field" id="fs-maxBetRateExpress" type="number" step="0.1" data-field="maxBetRateExpress" placeholder="100" />
+                  <label class="form-label" for="fs-level">Уровень</label>
+                  <input class="form-input fs-field" id="fs-level" type="number" min="1" step="1" data-field="level" placeholder="1" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="fs-minBetRateOrdinary">minBetRateOrdinary</label>
-                  <input class="form-input fs-field" id="fs-minBetRateOrdinary" type="number" step="0.1" data-field="minBetRateOrdinary" placeholder="0.1" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="fs-maxBetRateOrdinary">maxBetRateOrdinary</label>
-                  <input class="form-input fs-field" id="fs-maxBetRateOrdinary" type="number" step="0.1" data-field="maxBetRateOrdinary" placeholder="100" />
+                  <label class="form-label" for="fs-validityPeriod">Срок действия</label>
+                  <input class="form-input fs-field" id="fs-validityPeriod" type="number" data-field="validityPeriod" placeholder="168" />
+                  <p class="form-hint">Срок действия в часах.</p>
                 </div>
 
                 <div class="bonus-status" id="fs-bonus-status">
@@ -1108,7 +1123,6 @@
                 <span class="form-label">Тип триггера</span>
                 <div class="trigger-type-tabs" id="trigger-type-tabs">
                   <button class="trigger-type-tab trigger-type-tab--active" type="button" data-trigger-type="registration">Регистрация</button>
-                  <button class="trigger-type-tab" type="button" data-trigger-type="subscription">Подписка</button>
                   <button class="trigger-type-tab" type="button" data-trigger-type="tg_subscription">Подписка на TG</button>
                   <button class="trigger-type-tab" type="button" data-trigger-type="pwa_download">Скачивание PWA</button>
                   <button class="trigger-type-tab" type="button" data-trigger-type="deposit">Депозит</button>
@@ -1120,60 +1134,14 @@
                 <h3 class="trigger-panel__title">Trigger settings (Регистрация)</h3>
                 <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
                 <div class="form-block">
-                  <label class="form-label" for="reg-allowedCountries">allowedCountries</label>
-                  <input class="form-input registration-field" id="reg-allowedCountries" type="text" data-field="allowedCountries" placeholder="RU,KZ,BY" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="reg-requireEmailVerified">requireEmailVerified</label>
-                  <select class="form-select registration-field" id="reg-requireEmailVerified" data-field="requireEmailVerified">
-                    <option value="">Выберите</option>
-                    <option value="yes">Да</option>
-                    <option value="no">Нет</option>
-                  </select>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="reg-minAge">minAge</label>
-                  <input class="form-input registration-field" id="reg-minAge" type="number" data-field="minAge" placeholder="18" />
+                  <label class="form-label" for="reg-name">Название</label>
+                  <input class="form-input registration-field" id="reg-name" type="text" data-field="name" placeholder="Название триггера" />
                 </div>
                 <div class="bonus-status" id="registration-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
                   <span class="bonus-status__text">Не готов к добавлению в акцию</span>
                 </div>
                 <button class="btn btn--primary btn--full" type="button" id="btn-save-registration-trigger" disabled>
-                  Сохранить настройки триггера
-                </button>
-              </div>
-
-              <div class="bonus-type-panel hidden" id="trigger-panel-subscription">
-                <h3 class="trigger-panel__title">Trigger settings (Подписка)</h3>
-                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
-                <div class="form-block">
-                  <label class="form-label" for="sub-planId">planId</label>
-                  <input class="form-input subscription-field" id="sub-planId" type="text" data-field="planId" placeholder="premium_monthly" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="sub-channel">channel</label>
-                  <select class="form-select subscription-field" id="sub-channel" data-field="channel">
-                    <option value="">Выберите канал</option>
-                    <option value="email">Email</option>
-                    <option value="push">Push</option>
-                    <option value="sms">SMS</option>
-                    <option value="all">Все</option>
-                  </select>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="sub-renewalOnly">renewalOnly</label>
-                  <select class="form-select subscription-field" id="sub-renewalOnly" data-field="renewalOnly">
-                    <option value="">Выберите</option>
-                    <option value="yes">Только продление</option>
-                    <option value="no">Новая подписка</option>
-                  </select>
-                </div>
-                <div class="bonus-status" id="subscription-trigger-status">
-                  <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
-                  <span class="bonus-status__text">Не готов к добавлению в акцию</span>
-                </div>
-                <button class="btn btn--primary btn--full" type="button" id="btn-save-subscription-trigger" disabled>
                   Сохранить настройки триггера
                 </button>
               </div>
@@ -1244,18 +1212,54 @@
 
               <div class="bonus-type-panel hidden" id="trigger-panel-deposit">
                 <h3 class="trigger-panel__title">Trigger settings (Депозит)</h3>
-                <p class="trigger-panel__hint">Заполните все поля — триггер станет доступен для добавления в акцию.</p>
+                <p class="trigger-panel__hint">Заполните все обязательные поля — триггер станет доступен для добавления в акцию.</p>
                 <div class="form-block">
-                  <label class="form-label" for="dep-minAmount">minAmount</label>
-                  <input class="form-input deposit-field" id="dep-minAmount" type="number" data-field="minAmount" placeholder="100" />
+                  <label class="form-label form-label--optional" for="dep-availableWeights">Доступные веса</label>
+                  <input class="form-input deposit-field" id="dep-availableWeights" type="text" data-field="availableWeights" placeholder="1, 2, 3" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="dep-currencyId">currencyId</label>
+                  <label class="form-label form-label--optional" for="dep-prohibitingTags">Запрещающие теги</label>
+                  <textarea class="form-input form-textarea deposit-field" id="dep-prohibitingTags" rows="2" data-field="prohibitingTags" placeholder="fraud, self_excluded"></textarea>
+                </div>
+                <div class="form-block">
+                  <label class="form-label form-label--optional" for="dep-maxDepositAmount">Максимальная сумма одного депозита игрока для получения вознаграждения</label>
+                  <input class="form-input deposit-field" id="dep-maxDepositAmount" type="number" min="0" max="1000000000000000" step="0.00000001" data-field="maxDepositAmount" placeholder="10000" />
+                  <p class="form-hint">От 0 до 1&nbsp;000&nbsp;000&nbsp;000&nbsp;000&nbsp;000, до 8 знаков после запятой. В валюте приложения.</p>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-minDepositAmount">Минимальная сумма одного депозита игрока для получения вознаграждения</label>
+                  <input class="form-input deposit-field" id="dep-minDepositAmount" type="number" min="0" max="1000000000000000" step="0.00000001" data-field="minDepositAmount" placeholder="100" />
+                  <p class="form-hint">От 0 до 1&nbsp;000&nbsp;000&nbsp;000&nbsp;000&nbsp;000, до 8 знаков после запятой. В валюте приложения.</p>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-depositMultiplier">Мультипликатор депозита из связанной программы бонуса за депозит</label>
+                  <input class="form-input deposit-field" id="dep-depositMultiplier" type="number" min="0" max="100000" step="0.01" data-field="depositMultiplier" placeholder="1" />
+                  <p class="form-hint">Депозит умножается на мультипликатор, результат конвертируется в валюту cash-бонуса. От 0 до 100&nbsp;000, до 2 знаков после запятой.</p>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-amount">Сумма</label>
+                  <input class="form-input deposit-field" id="dep-amount" type="number" min="0" max="1000000000000000" step="0.00000001" data-field="amount" placeholder="500" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-currencyId">Валюта</label>
                   <input class="form-input deposit-field" id="dep-currencyId" type="number" data-field="currencyId" placeholder="123" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="dep-minDepositNumber">minDepositNumber</label>
-                  <input class="form-input deposit-field" id="dep-minDepositNumber" type="number" data-field="minDepositNumber" placeholder="1" />
+                  <label class="form-label" for="dep-depositType">Тип депозита</label>
+                  <select class="form-select deposit-field" id="dep-depositType" data-field="depositType">
+                    <option value="">Выберите тип</option>
+                    <option value="first">Первый</option>
+                    <option value="repeat">Повторный</option>
+                    <option value="any">Любой</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-depositCount">Количество</label>
+                  <input class="form-input deposit-field" id="dep-depositCount" type="number" min="1" step="1" data-field="depositCount" placeholder="1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label" for="dep-accountingDepth">Глубина учёта</label>
+                  <input class="form-input deposit-field" id="dep-accountingDepth" type="number" min="1" step="1" data-field="accountingDepth" placeholder="1" />
                 </div>
                 <div class="bonus-status" id="deposit-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
