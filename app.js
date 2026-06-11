@@ -147,24 +147,46 @@ const SEED_PROMOTIONS = [
       nodes: [
         {
           id: 'n1',
-          type: 'trigger',
+          type: 'start',
           x: 40,
+          y: 120,
+          label: 'Старт',
+          triggerId: null,
+          bonusId: null,
+        },
+        {
+          id: 'n2',
+          type: 'trigger',
+          x: 280,
           y: 120,
           label: 'Ставка',
           triggerId: null,
           bonusId: null,
         },
         {
-          id: 'n2',
+          id: 'n3',
           type: 'bonus',
-          x: 280,
+          x: 520,
           y: 120,
           label: 'Кэшбэк VIP',
           triggerId: null,
           bonusId: null,
         },
+        {
+          id: 'n4',
+          type: 'end',
+          x: 760,
+          y: 120,
+          label: 'End',
+          triggerId: null,
+          bonusId: null,
+        },
       ],
-      edges: [{ id: 'e1', from: 'n1', fromPort: 'completed', to: 'n2' }],
+      edges: [
+        { id: 'e1', from: 'n1', fromPort: 'end', to: 'n2' },
+        { id: 'e2', from: 'n2', fromPort: 'completed', to: 'n3' },
+        { id: 'e3', from: 'n3', fromPort: 'end', to: 'n4' },
+      ],
     },
     userIds: [],
   },
@@ -281,9 +303,9 @@ const BONUS_FORMULA_LABELS = {
 
 const BONUS_FORMULA_HINTS = {
   fixed:
-    'Фиксированный размер награды. В акции триггер (например, депозит) определяет, когда выдать бонус.',
+    'Фиксированный размер награды. Подходит для порогового триггера «Депозит» — игрок вносит от X, получает фиксированную сумму.',
   percent:
-    'Сумма считается как процент от базы начисления. Конкретная база (депозит или ставки) задаётся триггером в акции.',
+    'Сумма = база начисления × процент. Для триггера «Депозит» в режиме «Процент от суммы депозита» базой служит сумма подходящего депозита.',
 };
 
 function normalizeCashFormula(formula) {
@@ -547,6 +569,8 @@ const btnAddBonusPackSimpleRow = document.getElementById('btn-add-bonus-pack-sim
 const graphBonusSelect = document.getElementById('graph-bonus-select');
 const graphBonusHint = document.getElementById('graph-bonus-hint');
 const promoPanelGeneral = document.getElementById('promo-panel-general');
+const promoPanelStart = document.getElementById('promo-panel-start');
+const promoPanelEnd = document.getElementById('promo-panel-end');
 const promoPanelTrigger = document.getElementById('promo-panel-trigger');
 const promoPanelBonusNode = document.getElementById('promo-panel-bonus-node');
 const graphTriggerSelect = document.getElementById('graph-trigger-select');
@@ -584,26 +608,18 @@ const CONFIGURED_TRIGGER_TYPES = [
   'bet',
 ];
 
+const TRIGGER_TIMEOUT_FIELD = 'timeoutHours';
+const TRIGGER_OPTIONAL_FIELDS = [TRIGGER_TIMEOUT_FIELD];
+
 const TRIGGER_CONFIG_FIELDS = {
-  registration: ['name'],
-  tg_subscription: ['botUsername', 'target', 'targetId'],
-  pwa_download: ['platform', 'installType', 'versionMin'],
-  deposit: [
-    'availableWeights',
-    'prohibitingTags',
-    'maxDepositAmount',
-    'minDepositAmount',
-    'depositMultiplier',
-    'amount',
-    'currencyId',
-    'depositType',
-    'depositCount',
-    'accountingDepth',
-  ],
-  bet: ['minAmount', 'minOdds', 'allowedBetTypes'],
+  registration: ['name', TRIGGER_TIMEOUT_FIELD],
+  tg_subscription: ['botUsername', 'target', 'targetId', TRIGGER_TIMEOUT_FIELD],
+  pwa_download: ['platform', 'installType', 'versionMin', TRIGGER_TIMEOUT_FIELD],
+  deposit: [], // см. getDepositTriggerConfigFields()
+  bet: ['minAmount', 'minOdds', 'allowedBetTypes', TRIGGER_TIMEOUT_FIELD],
 };
 
-const triggerTypeTabs = document.querySelectorAll('.trigger-type-tab');
+const triggerTypeTabs = document.querySelectorAll('[data-trigger-type]');
 const triggerPanels = {
   registration: document.getElementById('trigger-panel-registration'),
   tg_subscription: document.getElementById('trigger-panel-tg_subscription'),
@@ -616,6 +632,25 @@ const registrationFields = document.querySelectorAll('.registration-field');
 const tgSubscriptionFields = document.querySelectorAll('.tg-subscription-field');
 const pwaDownloadFields = document.querySelectorAll('.pwa-download-field');
 const depositFields = document.querySelectorAll('.deposit-field');
+const depositModeTabs = document.querySelectorAll('[data-deposit-mode]');
+const depositModeHint = document.getElementById('deposit-mode-hint');
+const depositTriggerPromoHint = document.getElementById('deposit-trigger-promo-hint');
+const depMinDepositAmountLabel = document.getElementById('dep-minDepositAmount-label');
+const depMinDepositAmountHint = document.getElementById('dep-minDepositAmount-hint');
+
+const DEPOSIT_TRIGGER_MODE_LABELS = {
+  from_deposit: 'Процент от суммы депозита',
+  threshold: 'Пороговый депозит',
+};
+
+const DEPOSIT_TRIGGER_MODE_HINTS = {
+  from_deposit:
+    'Подходящий депозит передаёт свою сумму в связанную награду. Для денежного бонуса укажите формулу «% процент» — начисление = сумма депозита × процент.',
+  threshold:
+    'Триггер срабатывает при депозите от указанного порога. Для денежного бонуса в награде задайте фиксированную сумму.',
+};
+
+let activeDepositTriggerMode = 'from_deposit';
 const betFields = document.querySelectorAll('.bet-field');
 
 let triggers = [];
@@ -1083,17 +1118,25 @@ function showPromoNodePanel(node) {
   attachedPromoTriggerNodeId = node?.type === 'trigger' ? node.id : null;
 
   promoPanelGeneral.classList.toggle('hidden', !!node);
+  promoPanelStart?.classList.add('hidden');
+  promoPanelEnd?.classList.add('hidden');
   promoPanelTrigger.classList.add('hidden');
   promoPanelBonusNode.classList.add('hidden');
   setPromoTriggerPickerVisible(true);
+  depositTriggerPromoHint?.classList.add('hidden');
 
   if (!node) return;
 
-  if (node.type === 'trigger') {
+  if (node.type === 'start') {
+    promoPanelStart?.classList.remove('hidden');
+  } else if (node.type === 'end') {
+    promoPanelEnd?.classList.remove('hidden');
+  } else if (node.type === 'trigger') {
     promoPanelTrigger.classList.remove('hidden');
     refreshGraphTriggerSelect();
     graphTriggerSelect.value = node.triggerId ? String(node.triggerId) : '';
     triggerLabelInput.value = node.label || '';
+    refreshDepositTriggerPromoHint(node);
   } else if (node.type === 'bonus') {
     promoPanelBonusNode.classList.remove('hidden');
     refreshGraphBonusSelect();
@@ -2604,6 +2647,47 @@ function buildLvlUpBonusSelectOptions(selectedId) {
   return options.join('');
 }
 
+function getDepositTriggerConfigFields(mode = activeDepositTriggerMode) {
+  const base = ['currencyId', 'depositType', 'depositCount', 'accountingDepth', TRIGGER_TIMEOUT_FIELD];
+  if (mode === 'threshold') {
+    return ['availableWeights', 'prohibitingTags', 'minDepositAmount', ...base];
+  }
+  return ['availableWeights', 'prohibitingTags', 'maxDepositAmount', 'minDepositAmount', ...base];
+}
+
+function switchDepositTriggerMode(mode) {
+  activeDepositTriggerMode = mode === 'threshold' ? 'threshold' : 'from_deposit';
+  depositModeTabs.forEach((tab) => {
+    tab.classList.toggle(
+      'deposit-mode-tab--active',
+      tab.dataset.depositMode === activeDepositTriggerMode
+    );
+  });
+  if (depositModeHint) {
+    depositModeHint.textContent = DEPOSIT_TRIGGER_MODE_HINTS[activeDepositTriggerMode];
+  }
+  document.querySelectorAll('.deposit-mode-field--from-deposit').forEach((el) => {
+    el.classList.toggle('hidden', activeDepositTriggerMode !== 'from_deposit');
+  });
+  if (depMinDepositAmountLabel) {
+    depMinDepositAmountLabel.textContent =
+      activeDepositTriggerMode === 'threshold'
+        ? 'Порог депозита (от суммы и выше)'
+        : 'Минимальная сумма одного депозита для начисления';
+    depMinDepositAmountLabel.classList.toggle(
+      'form-label--optional',
+      activeDepositTriggerMode === 'from_deposit'
+    );
+  }
+  if (depMinDepositAmountHint) {
+    depMinDepositAmountHint.textContent =
+      activeDepositTriggerMode === 'threshold'
+        ? 'Обязательно. При депозите от этой суммы активируется связанная награда.'
+        : 'Опционально. Нижняя граница суммы, которая передаётся в награду.';
+  }
+  updateTriggerUI();
+}
+
 function switchTriggerType(type) {
   activeTriggerType = type;
   triggerTypeTabs.forEach((tab) => {
@@ -2612,6 +2696,9 @@ function switchTriggerType(type) {
   Object.entries(triggerPanels).forEach(([key, panel]) => {
     panel?.classList.toggle('hidden', key !== type);
   });
+  if (type === 'deposit') {
+    switchDepositTriggerMode(activeDepositTriggerMode);
+  }
   updateTriggerUI();
 }
 
@@ -2636,9 +2723,25 @@ function clearTriggerForm(type) {
   getTriggerFields(type).forEach((el) => {
     el.value = '';
   });
+  if (type === 'deposit') {
+    switchDepositTriggerMode('from_deposit');
+  }
+}
+
+function resolveDepositTriggerMode(trigger) {
+  if (trigger.depositMode === 'threshold' || trigger.depositMode === 'from_deposit') {
+    return trigger.depositMode;
+  }
+  if (trigger.depositMultiplier != null || trigger.amount != null) {
+    return 'from_deposit';
+  }
+  return 'threshold';
 }
 
 function loadTriggerForm(type, trigger) {
+  if (type === 'deposit') {
+    switchDepositTriggerMode(resolveDepositTriggerMode(trigger));
+  }
   getTriggerFields(type).forEach((el) => {
     const key = el.dataset.field;
     if (trigger[key] !== undefined) el.value = trigger[key];
@@ -2658,19 +2761,32 @@ const DEPOSIT_TRIGGER_OPTIONAL_FIELDS = ['availableWeights', 'prohibitingTags', 
 const DEPOSIT_TRIGGER_NUMERIC_FIELDS = [
   'maxDepositAmount',
   'minDepositAmount',
-  'depositMultiplier',
-  'amount',
   'currencyId',
   'depositCount',
   'accountingDepth',
 ];
 
 function isTriggerConfigComplete(type, data = getTriggerFormData(type)) {
-  const fields = TRIGGER_CONFIG_FIELDS[type] || [];
+  const fields =
+    type === 'deposit' ? getDepositTriggerConfigFields(activeDepositTriggerMode) : TRIGGER_CONFIG_FIELDS[type] || [];
   return fields.every((key) => {
     const val = data[key];
     if (type === 'deposit' && DEPOSIT_TRIGGER_OPTIONAL_FIELDS.includes(key)) {
       if (val === '' || val === undefined) return true;
+    }
+    if (
+      type === 'deposit' &&
+      key === 'minDepositAmount' &&
+      activeDepositTriggerMode === 'from_deposit'
+    ) {
+      if (val === '' || val === undefined) return true;
+    }
+    if (TRIGGER_OPTIONAL_FIELDS.includes(key)) {
+      if (val === '' || val === undefined) return true;
+      if (key === TRIGGER_TIMEOUT_FIELD) {
+        const num = Number(val);
+        return !Number.isNaN(num) && Number.isInteger(num) && num >= 1;
+      }
     }
     if (val === '' || val === undefined) return false;
     if (['minAge', 'minAmount', 'currencyId', 'minOdds'].includes(key)) {
@@ -2679,11 +2795,13 @@ function isTriggerConfigComplete(type, data = getTriggerFormData(type)) {
     if (type === 'deposit' && DEPOSIT_TRIGGER_NUMERIC_FIELDS.includes(key)) {
       const num = Number(val);
       if (Number.isNaN(num) || num < 0) return false;
-      if (key === 'depositMultiplier' && num > 100000) return false;
       if (
-        ['maxDepositAmount', 'minDepositAmount', 'amount'].includes(key) &&
+        ['maxDepositAmount', 'minDepositAmount'].includes(key) &&
         num > 1_000_000_000_000_000
       ) {
+        return false;
+      }
+      if (key === 'minDepositAmount' && activeDepositTriggerMode === 'threshold' && num <= 0) {
         return false;
       }
       if (['depositCount', 'accountingDepth'].includes(key)) {
@@ -2704,19 +2822,25 @@ function buildTriggerFromForm(type, data, id, createdAt) {
     ...data,
   };
   if (type === 'deposit') {
-    base.minDepositAmount = Number(data.minDepositAmount);
-    base.depositMultiplier = Number(data.depositMultiplier);
-    base.amount = Number(data.amount);
+    base.depositMode = activeDepositTriggerMode;
     base.currencyId = Number(data.currencyId);
     base.depositCount = Number(data.depositCount);
     base.accountingDepth = Number(data.accountingDepth);
-    if (data.maxDepositAmount !== '') {
+    if (data.minDepositAmount !== '') {
+      base.minDepositAmount = Number(data.minDepositAmount);
+    }
+    if (activeDepositTriggerMode === 'from_deposit' && data.maxDepositAmount !== '') {
       base.maxDepositAmount = Number(data.maxDepositAmount);
     }
   }
   if (type === 'bet') {
     base.minAmount = Number(data.minAmount);
     base.minOdds = Number(data.minOdds);
+  }
+  if (data.timeoutHours !== '') {
+    base.timeoutHours = Number(data.timeoutHours);
+  } else {
+    delete base.timeoutHours;
   }
   return base;
 }
@@ -2746,28 +2870,58 @@ function updateTriggerUI() {
     : 'Сохранить настройки триггера';
 }
 
+function formatTriggerTimeoutPart(trigger) {
+  if (trigger.timeoutHours == null) return '';
+  return ` · ${trigger.timeoutHours} ч`;
+}
+
+function withTriggerTimeout(summary, trigger) {
+  return `${summary}${formatTriggerTimeoutPart(trigger)}`;
+}
+
 function formatTriggerSummary(trigger) {
   const type = trigger.triggerType;
-  if (type === 'registration') return trigger.name || '—';
+  if (type === 'registration') return withTriggerTimeout(trigger.name || '—', trigger);
   if (type === 'tg_subscription') {
     const target = trigger.target ? `${trigger.target}: ` : '';
-    return `${target}${trigger.targetId || '—'}`;
+    return withTriggerTimeout(`${target}${trigger.targetId || '—'}`, trigger);
   }
   if (type === 'pwa_download') {
     const platform = trigger.platform || '—';
     const installType = trigger.installType || '—';
     const ver = trigger.versionMin ? ` ≥ ${trigger.versionMin}` : '';
-    return `${platform} · ${installType}${ver}`;
+    return withTriggerTimeout(`${platform} · ${installType}${ver}`, trigger);
   }
   if (type === 'deposit') {
-    const min = trigger.minDepositAmount ?? trigger.minAmount;
+    const mode = resolveDepositTriggerMode(trigger);
+    const modeLabel = DEPOSIT_TRIGGER_MODE_LABELS[mode] || mode;
     const currency = trigger.currencyId ?? '—';
     const count = trigger.depositCount ?? trigger.minDepositNumber;
     const countPart = count ? `, ${count} деп.` : '';
-    return `от ${min} (валюта ${currency})${countPart}`;
+    if (mode === 'threshold') {
+      const min = trigger.minDepositAmount ?? trigger.minAmount ?? '—';
+      return withTriggerTimeout(
+        `${modeLabel}: от ${min} (валюта ${currency})${countPart}`,
+        trigger
+      );
+    }
+    const min = trigger.minDepositAmount ?? trigger.minAmount;
+    const max = trigger.maxDepositAmount;
+    const bounds =
+      min != null && max != null
+        ? `${min}–${max}`
+        : min != null
+          ? `от ${min}`
+          : max != null
+            ? `до ${max}`
+            : 'любая сумма';
+    return withTriggerTimeout(
+      `${modeLabel}: ${bounds} (валюта ${currency})${countPart}`,
+      trigger
+    );
   }
   if (type === 'bet') {
-    return `от ${trigger.minAmount}, кф. ${trigger.minOdds}`;
+    return withTriggerTimeout(`от ${trigger.minAmount}, кф. ${trigger.minOdds}`, trigger);
   }
   return '—';
 }
@@ -2781,6 +2935,56 @@ function getReadyConfiguredTriggers() {
   return triggers.filter(
     (t) => CONFIGURED_TRIGGER_TYPES.includes(t.triggerType) && t.status === 'ready'
   );
+}
+
+function getLinkedRewardBonusForTriggerNode(triggerNodeId) {
+  const scenario = GraphEditor.getScenario();
+  const edge = scenario.edges.find(
+    (e) => e.from === triggerNodeId && e.fromPort === 'completed'
+  );
+  if (!edge) return null;
+  const bonusNode = scenario.nodes.find((n) => n.id === edge.to && n.type === 'bonus');
+  if (!bonusNode?.bonusId) return null;
+  return bonuses.find((b) => b.id === bonusNode.bonusId) || null;
+}
+
+function refreshDepositTriggerPromoHint(triggerNode) {
+  if (!depositTriggerPromoHint || !triggerNode || triggerNode.type !== 'trigger') {
+    depositTriggerPromoHint?.classList.add('hidden');
+    return;
+  }
+
+  const triggerId = triggerNode.triggerId || Number(graphTriggerSelect?.value);
+  const trigger = triggers.find((t) => t.id === triggerId);
+  if (!trigger || trigger.triggerType !== 'deposit') {
+    depositTriggerPromoHint.classList.add('hidden');
+    return;
+  }
+
+  const mode = resolveDepositTriggerMode(trigger);
+  const linkedBonus = getLinkedRewardBonusForTriggerNode(triggerNode.id);
+  const modeHint = DEPOSIT_TRIGGER_MODE_HINTS[mode];
+  let compatibility = '';
+
+  if (linkedBonus?.bonusType === 'cash') {
+    const isPercent = isPercentCashFormula(linkedBonus.formula);
+    if (mode === 'from_deposit' && !isPercent) {
+      compatibility =
+        ' Связанный денежный бонус — фиксированный; для этого режима нужен «% процент».';
+    } else if (mode === 'threshold' && isPercent) {
+      compatibility =
+        ' Связанный денежный бонус — процентный; для порогового депозита нужна фиксированная сумма.';
+    } else if (mode === 'from_deposit' && isPercent) {
+      compatibility = ` Начисление: сумма депозита × ${linkedBonus.percent ?? '—'}%.`;
+    }
+  } else if (linkedBonus) {
+    compatibility = ' Для нединежных наград формула бонуса не зависит от режима депозита.';
+  } else {
+    compatibility = ' Соедините выход «выполнен» с нодой «Награда», чтобы проверить совместимость.';
+  }
+
+  depositTriggerPromoHint.textContent = modeHint + compatibility;
+  depositTriggerPromoHint.classList.remove('hidden');
 }
 
 function refreshGraphTriggerSelect() {
@@ -3471,6 +3675,10 @@ triggerTypeTabs.forEach((tab) => {
   tab.addEventListener('click', () => switchTriggerType(tab.dataset.triggerType));
 });
 
+depositModeTabs.forEach((tab) => {
+  tab.addEventListener('click', () => switchDepositTriggerMode(tab.dataset.depositMode));
+});
+
 CONFIGURED_BONUS_TYPES.forEach((type) => {
   getBonusFields(type).forEach((el) => {
     el.addEventListener('input', updateBonusUI);
@@ -3507,6 +3715,9 @@ graphTriggerSelect?.addEventListener('change', () => {
   if (!selected) return;
   const triggerId = graphTriggerSelect.value ? Number(graphTriggerSelect.value) : null;
   GraphEditor.updateNode(selected, { triggerId });
+  GraphEditor.refreshTriggerNodes();
+  const node = GraphEditor.getScenario().nodes.find((n) => n.id === selected);
+  refreshDepositTriggerPromoHint(node);
 });
 
 triggerLabelInput?.addEventListener('input', () => {
@@ -3551,6 +3762,7 @@ vipTiers = SEED_VIP_TIERS.map((t) => ({
 switchBonusFormula('fixed');
 switchBonusType('cash');
 clearBonusWageringForm();
+switchDepositTriggerMode('from_deposit');
 switchTriggerType('registration');
 updateBonusUI();
 updateTriggerUI();

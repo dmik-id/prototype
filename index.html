@@ -192,11 +192,17 @@
 
             <div class="graph-workspace__header">
               <div class="graph-workspace__actions">
+                <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-start">
+                  <span class="graph-btn-dot graph-btn-dot--start" aria-hidden="true"></span>Старт
+                </button>
                 <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-trigger">
                   <span class="graph-btn-dot graph-btn-dot--trigger" aria-hidden="true"></span>Триггер
                 </button>
                 <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-bonus-node">
                   <span class="graph-btn-dot graph-btn-dot--bonus" aria-hidden="true"></span>Награда
+                </button>
+                <button class="btn btn--secondary btn--sm btn--graph" type="button" id="btn-add-end">
+                  <span class="graph-btn-dot graph-btn-dot--end" aria-hidden="true"></span>End
                 </button>
               </div>
             </div>
@@ -371,7 +377,19 @@
                   <input class="hidden" id="promo-users-csv-input" type="file" accept=".csv,text/csv" />
                 </div>
 
-                <p class="form-hint graph-panel-hint">Кликните по ноде на схеме, чтобы настроить триггер или бонус.</p>
+                <p class="form-hint graph-panel-hint">Кликните по ноде на схеме, чтобы настроить триггер или награду.</p>
+              </div>
+
+              <!-- Свойства выбранной ноды: Старт -->
+              <div class="hidden" id="promo-panel-start">
+                <p class="graph-node-panel__badge graph-node-panel__badge--start">Старт</p>
+                <p class="form-hint">Точка входа в акцию. Настройки не требуются — соедините выход с входом триггера или награды.</p>
+              </div>
+
+              <!-- Свойства выбранной ноды: End -->
+              <div class="hidden" id="promo-panel-end">
+                <p class="graph-node-panel__badge graph-node-panel__badge--end">End</p>
+                <p class="form-hint">Точка выхода из акции. Настройки не требуются — подключите выход триггера или награды ко входу ноды.</p>
               </div>
 
               <!-- Свойства выбранной ноды: Триггер -->
@@ -384,6 +402,7 @@
                       <option value="">Сначала настройте триггер</option>
                     </select>
                   <p class="form-hint" id="graph-trigger-hint">Доступны сохранённые триггеры: регистрация, подписка, подписка на TG, скачивание PWA, депозит, ставка.</p>
+                  <p class="form-hint hidden" id="deposit-trigger-promo-hint"></p>
                   </div>
                   <div class="form-block">
                     <button class="btn btn--primary btn--full" type="button" id="btn-promo-create-trigger">
@@ -394,7 +413,7 @@
                 <div class="form-block" id="promo-trigger-label-block">
                   <label class="form-label" for="trigger-label">Подпись на схеме</label>
                   <input class="form-input" id="trigger-label" type="text" placeholder="Триггер" />
-                  <p class="form-hint">Два выхода: «выполнен» — триггер сработал в срок, «не выполнен» — время истекло. От каждого можно вести свою цепочку.</p>
+                  <p class="form-hint">Два выхода: «выполнен» — действие выполнено в срок, «не выполнен» — время истекло. Таймер в настройках триггера (часы); пустое поле — ждём неограниченно.</p>
                 </div>
               </div>
 
@@ -518,7 +537,7 @@
                     <button class="bonus-formula-tab" type="button" data-bonus-formula="percent">% процент</button>
                   </div>
                   <p class="form-hint" id="bonus-formula-hint">
-                    Фиксированный размер награды. В акции триггер (например, депозит) определяет, когда выдать бонус.
+                    Фиксированный размер награды. Подходит для порогового триггера «Депозит» — игрок вносит от X, получает фиксированную сумму.
                   </p>
                 </div>
 
@@ -1137,6 +1156,11 @@
                   <label class="form-label" for="reg-name">Название</label>
                   <input class="form-input registration-field" id="reg-name" type="text" data-field="name" placeholder="Название триггера" />
                 </div>
+                <div class="form-block">
+                  <label class="form-label form-label--optional" for="reg-timeoutHours">Таймер ожидания, ч</label>
+                  <input class="form-input registration-field" id="reg-timeoutHours" type="number" min="1" step="1" data-field="timeoutHours" placeholder="24" />
+                  <p class="form-hint">Опционально. Пустое поле — ждём неограниченное время. Иначе не выполнено в срок → «не выполнен».</p>
+                </div>
                 <div class="bonus-status" id="registration-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
                   <span class="bonus-status__text">Не готов к добавлению в акцию</span>
@@ -1165,6 +1189,11 @@
                 <div class="form-block">
                   <label class="form-label" for="tg-targetId">targetId</label>
                   <input class="form-input tg-subscription-field" id="tg-targetId" type="text" data-field="targetId" placeholder="@my_channel или -1001234567890" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label form-label--optional" for="tg-timeoutHours">Таймер ожидания, ч</label>
+                  <input class="form-input tg-subscription-field" id="tg-timeoutHours" type="number" min="1" step="1" data-field="timeoutHours" placeholder="24" />
+                  <p class="form-hint">Опционально. Пустое поле — ждём неограниченное время. Иначе не выполнено в срок → «не выполнен».</p>
                 </div>
                 <div class="bonus-status" id="tg_subscription-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
@@ -1201,6 +1230,11 @@
                   <label class="form-label" for="pwa-versionMin">versionMin</label>
                   <input class="form-input pwa-download-field" id="pwa-versionMin" type="text" data-field="versionMin" placeholder="1.0.0" />
                 </div>
+                <div class="form-block">
+                  <label class="form-label form-label--optional" for="pwa-timeoutHours">Таймер ожидания, ч</label>
+                  <input class="form-input pwa-download-field" id="pwa-timeoutHours" type="number" min="1" step="1" data-field="timeoutHours" placeholder="24" />
+                  <p class="form-hint">Опционально. Пустое поле — ждём неограниченное время. Иначе не выполнено в срок → «не выполнен».</p>
+                </div>
                 <div class="bonus-status" id="pwa_download-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
                   <span class="bonus-status__text">Не готов к добавлению в акцию</span>
@@ -1214,6 +1248,16 @@
                 <h3 class="trigger-panel__title">Trigger settings (Депозит)</h3>
                 <p class="trigger-panel__hint">Заполните все обязательные поля — триггер станет доступен для добавления в акцию.</p>
                 <div class="form-block">
+                  <span class="form-label">Режим начисления</span>
+                  <div class="deposit-mode-tabs" id="deposit-mode-tabs">
+                    <button class="deposit-mode-tab deposit-mode-tab--active" type="button" data-deposit-mode="from_deposit">Процент от суммы депозита</button>
+                    <button class="deposit-mode-tab" type="button" data-deposit-mode="threshold">Пороговый депозит</button>
+                  </div>
+                  <p class="form-hint" id="deposit-mode-hint">
+                    Подходящий депозит передаёт свою сумму в связанную награду. Для денежного бонуса укажите формулу «% процент» — начисление = сумма депозита × процент.
+                  </p>
+                </div>
+                <div class="form-block">
                   <label class="form-label form-label--optional" for="dep-availableWeights">Доступные веса</label>
                   <input class="form-input deposit-field" id="dep-availableWeights" type="text" data-field="availableWeights" placeholder="1, 2, 3" />
                 </div>
@@ -1221,24 +1265,15 @@
                   <label class="form-label form-label--optional" for="dep-prohibitingTags">Запрещающие теги</label>
                   <textarea class="form-input form-textarea deposit-field" id="dep-prohibitingTags" rows="2" data-field="prohibitingTags" placeholder="fraud, self_excluded"></textarea>
                 </div>
-                <div class="form-block">
-                  <label class="form-label form-label--optional" for="dep-maxDepositAmount">Максимальная сумма одного депозита игрока для получения вознаграждения</label>
+                <div class="form-block deposit-mode-field deposit-mode-field--from-deposit" id="dep-maxDepositAmount-block">
+                  <label class="form-label form-label--optional" for="dep-maxDepositAmount">Максимальная сумма одного депозита для начисления</label>
                   <input class="form-input deposit-field" id="dep-maxDepositAmount" type="number" min="0" max="1000000000000000" step="0.00000001" data-field="maxDepositAmount" placeholder="10000" />
-                  <p class="form-hint">От 0 до 1&nbsp;000&nbsp;000&nbsp;000&nbsp;000&nbsp;000, до 8 знаков после запятой. В валюте приложения.</p>
+                  <p class="form-hint">Опционально. Верхняя граница суммы, которая передаётся в награду.</p>
                 </div>
-                <div class="form-block">
-                  <label class="form-label" for="dep-minDepositAmount">Минимальная сумма одного депозита игрока для получения вознаграждения</label>
+                <div class="form-block" id="dep-minDepositAmount-block">
+                  <label class="form-label" for="dep-minDepositAmount" id="dep-minDepositAmount-label">Минимальная сумма одного депозита для начисления</label>
                   <input class="form-input deposit-field" id="dep-minDepositAmount" type="number" min="0" max="1000000000000000" step="0.00000001" data-field="minDepositAmount" placeholder="100" />
-                  <p class="form-hint">От 0 до 1&nbsp;000&nbsp;000&nbsp;000&nbsp;000&nbsp;000, до 8 знаков после запятой. В валюте приложения.</p>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="dep-depositMultiplier">Мультипликатор депозита из связанной программы бонуса за депозит</label>
-                  <input class="form-input deposit-field" id="dep-depositMultiplier" type="number" min="0" max="100000" step="0.01" data-field="depositMultiplier" placeholder="1" />
-                  <p class="form-hint">Депозит умножается на мультипликатор, результат конвертируется в валюту cash-бонуса. От 0 до 100&nbsp;000, до 2 знаков после запятой.</p>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="dep-amount">Сумма</label>
-                  <input class="form-input deposit-field" id="dep-amount" type="number" min="0" max="1000000000000000" step="0.00000001" data-field="amount" placeholder="500" />
+                  <p class="form-hint" id="dep-minDepositAmount-hint">Опционально. Нижняя граница суммы, которая передаётся в награду.</p>
                 </div>
                 <div class="form-block">
                   <label class="form-label" for="dep-currencyId">Валюта</label>
@@ -1260,6 +1295,11 @@
                 <div class="form-block">
                   <label class="form-label" for="dep-accountingDepth">Глубина учёта</label>
                   <input class="form-input deposit-field" id="dep-accountingDepth" type="number" min="1" step="1" data-field="accountingDepth" placeholder="1" />
+                </div>
+                <div class="form-block">
+                  <label class="form-label form-label--optional" for="dep-timeoutHours">Таймер ожидания, ч</label>
+                  <input class="form-input deposit-field" id="dep-timeoutHours" type="number" min="1" step="1" data-field="timeoutHours" placeholder="72" />
+                  <p class="form-hint">Опционально. Пустое поле — ждём неограниченное время. Иначе не выполнено в срок → «не выполнен».</p>
                 </div>
                 <div class="bonus-status" id="deposit-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
@@ -1289,6 +1329,11 @@
                     <option value="express">express</option>
                     <option value="all">all</option>
                   </select>
+                </div>
+                <div class="form-block">
+                  <label class="form-label form-label--optional" for="bet-timeoutHours">Таймер ожидания, ч</label>
+                  <input class="form-input bet-field" id="bet-timeoutHours" type="number" min="1" step="1" data-field="timeoutHours" placeholder="24" />
+                  <p class="form-hint">Опционально. Пустое поле — ждём неограниченное время. Иначе не выполнено в срок → «не выполнен».</p>
                 </div>
                 <div class="bonus-status" id="bet-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>

@@ -699,7 +699,8 @@ body {
 /* Bonus formula & type tabs */
 .bonus-formula-tabs,
 .bonus-type-tabs,
-.trigger-type-tabs {
+.trigger-type-tabs,
+.deposit-mode-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -707,7 +708,8 @@ body {
 
 .bonus-formula-tab,
 .bonus-type-tab,
-.trigger-type-tab {
+.trigger-type-tab,
+.deposit-mode-tab {
   padding: 6px 12px;
   border: 1px solid var(--border);
   background: #f5f6f8;
@@ -721,14 +723,16 @@ body {
 
 .bonus-formula-tab:hover,
 .bonus-type-tab:hover,
-.trigger-type-tab:hover {
+.trigger-type-tab:hover,
+.deposit-mode-tab:hover {
   color: var(--text);
   border-color: #c9a000;
 }
 
 .bonus-formula-tab--active,
 .bonus-type-tab--active,
-.trigger-type-tab--active {
+.trigger-type-tab--active,
+.deposit-mode-tab--active {
   background: #fff9e6;
   border-color: #c9a000;
   color: var(--text);
@@ -905,12 +909,20 @@ body {
   flex-shrink: 0;
 }
 
+.graph-btn-dot--start {
+  background: #3d9a5f;
+}
+
 .graph-btn-dot--trigger {
   background: #7c5cbf;
 }
 
 .graph-btn-dot--bonus {
   background: #3b82c4;
+}
+
+.graph-btn-dot--end {
+  background: #d64545;
 }
 
 .toolbar__hint {
@@ -1010,6 +1022,14 @@ body {
 
 .graph-node.is-dragging .graph-node__header {
   cursor: grabbing;
+}
+
+.graph-node--start .graph-node__header {
+  background: linear-gradient(135deg, #4cb87a, #2d8f55);
+}
+
+.graph-node--end .graph-node__header {
+  background: linear-gradient(135deg, #e85d5d, #c0392b);
 }
 
 .graph-node--trigger .graph-node__header {
@@ -1424,6 +1444,16 @@ body {
   padding: 4px 8px;
   border-radius: 4px;
   margin-bottom: 14px;
+}
+
+.graph-node-panel__badge--start {
+  background: #e6f5ec;
+  color: #2d8f55;
+}
+
+.graph-node-panel__badge--end {
+  background: #fdeaea;
+  color: #c0392b;
 }
 
 .graph-node-panel__badge--trigger {
@@ -1870,6 +1900,12 @@ body {
 }
 
 /* Headers per type */
+.graph-node--start .graph-node__header {
+  background: linear-gradient(135deg, #4cb87a, #2d8f55);
+}
+.graph-node--end .graph-node__header {
+  background: linear-gradient(135deg, #e85d5d, #c0392b);
+}
 .graph-node--trigger .graph-node__header {
   background: linear-gradient(135deg, #8b6fd4, #6b4fa8);
 }

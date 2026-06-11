@@ -1,10 +1,11 @@
 /**
  * Графовый редактор сценария акции.
- * Два слоя: trigger → bonus (награда).
+ * Слои: start → trigger → bonus (награда) → end.
  */
 const GraphEditor = (() => {
   const NODE_W = 220;
   const NODE_H_APPROX = 130;
+  const NODE_H_FLOW = 100;
   const NODE_H_TRIGGER = 190;
   const MIN_ZOOM = 0.4;
   const MAX_ZOOM = 1.6;
@@ -56,8 +57,10 @@ const GraphEditor = (() => {
     els.underhoodTitle = document.getElementById('graph-underhood-title');
     els.underhoodBody = document.getElementById('graph-underhood-body');
 
+    document.getElementById('btn-add-start')?.addEventListener('click', () => addNode('start'));
     document.getElementById('btn-add-trigger')?.addEventListener('click', () => addNode('trigger'));
     document.getElementById('btn-add-bonus-node')?.addEventListener('click', () => addNode('bonus'));
+    document.getElementById('btn-add-end')?.addEventListener('click', () => addNode('end'));
     document.getElementById('graph-zoom-in')?.addEventListener('click', () => setZoom(zoom + 0.1));
     document.getElementById('graph-zoom-out')?.addEventListener('click', () => setZoom(zoom - 0.1));
     document.getElementById('graph-zoom-fit')?.addEventListener('click', fitToView);
@@ -105,6 +108,8 @@ const GraphEditor = (() => {
     const offset = nodes.length * 24;
     let label = 'Награда';
     if (type === 'trigger') label = 'Триггер';
+    if (type === 'start') label = 'Старт';
+    if (type === 'end') label = 'End';
 
     const node = {
       id: `n${nextNodeId++}`,
@@ -168,6 +173,12 @@ const GraphEditor = (() => {
 
   function canConnect(fromNode, toNode) {
     if (!fromNode || !toNode) return false;
+    if (toNode.type === 'end') {
+      return fromNode.type === 'bonus' || fromNode.type === 'trigger';
+    }
+    if (fromNode.type === 'start') {
+      return toNode.type === 'bonus' || toNode.type === 'trigger';
+    }
     if (fromNode.type === 'trigger') {
       return toNode.type === 'bonus' || toNode.type === 'trigger';
     }
@@ -385,12 +396,43 @@ const GraphEditor = (() => {
     return `Бонус #${bonus.id}${namePart}`;
   }
 
+  function depositTriggerMode(trigger) {
+    if (trigger.depositMode === 'threshold' || trigger.depositMode === 'from_deposit') {
+      return trigger.depositMode;
+    }
+    if (trigger.depositMultiplier != null || trigger.amount != null) return 'from_deposit';
+    return 'threshold';
+  }
+
+  function depositTriggerShort(trigger) {
+    const mode = depositTriggerMode(trigger);
+    if (mode === 'threshold') {
+      const min = trigger.minDepositAmount ?? '—';
+      return `порог от ${min}`;
+    }
+    const min = trigger.minDepositAmount;
+    const max = trigger.maxDepositAmount;
+    if (min != null && max != null) return `${min}–${max}`;
+    if (min != null) return `от ${min}`;
+    if (max != null) return `до ${max}`;
+    return '% от суммы';
+  }
+
+  function triggerTimeoutPart(trigger) {
+    if (trigger.timeoutHours == null) return '';
+    return ` · ${trigger.timeoutHours} ч`;
+  }
+
   function triggerLabel(triggerId) {
     if (!triggerId) return 'Выберите триггер справа →';
     const trigger = getTriggers().find((t) => t.id === triggerId);
     if (!trigger) return `Триггер #${triggerId}`;
     const typeLabel = TRIGGER_TYPE_LABELS[trigger.triggerType] || trigger.triggerType;
-    return `${typeLabel} #${trigger.id}`;
+    const timer = triggerTimeoutPart(trigger);
+    if (trigger.triggerType === 'deposit') {
+      return `${typeLabel} #${trigger.id} · ${depositTriggerShort(trigger)}${timer}`;
+    }
+    return `${typeLabel} #${trigger.id}${timer}`;
   }
 
   function triggerBody(node) {
@@ -523,34 +565,44 @@ const GraphEditor = (() => {
 
     els.nodesLayer.innerHTML = nodes
       .map((node) => {
+        const isStart = node.type === 'start';
+        const isEnd = node.type === 'end';
         const isTrigger = node.type === 'trigger';
         let body = bonusLabel(node.bonusId);
         if (isTrigger) body = triggerBody(node);
+        if (isStart) body = 'Точка входа в акцию';
+        if (isEnd) body = 'Точка выхода из акции';
 
-        const icon = isTrigger ? '⚡' : '🎁';
+        const icon = isStart ? '▶' : isEnd ? '◎' : isTrigger ? '⚡' : '🎁';
         const showUnderhood = isTrigger || node.type === 'bonus';
         const isRewardOut = isTrigger;
-        const startPort = `<div class="graph-port-row graph-port-row--start">
+        const startPort = isStart
+          ? ''
+          : `<div class="graph-port-row graph-port-row--start">
               <span class="graph-port graph-port--start" data-port="start" title="start — подключите линию"></span>
               <span class="graph-port-label">start</span>
             </div>`;
-        const outputPorts = isRewardOut
+        const outputPorts = isEnd
+          ? ''
+          : isStart || !isRewardOut
           ? `<div class="graph-node__ports-out">
-              <div class="graph-port-row graph-port-row--end">
-                <span class="graph-port-label">выполнен</span>
-                <span class="graph-port graph-port--completed ${connectingFrom === node.id && connectingFromPort === 'completed' ? 'is-connecting' : ''}" data-port="completed" title="Выполнен — триггер сработал за отведённое время"></span>
-              </div>
-              <div class="graph-port-row graph-port-row--end">
-                <span class="graph-port-label">не выполнен</span>
-                <span class="graph-port graph-port--failed ${connectingFrom === node.id && connectingFromPort === 'failed' ? 'is-connecting' : ''}" data-port="failed" title="Не выполнен — время истекло, триггер не выполнился"></span>
-              </div>
-            </div>`
-          : `<div class="graph-node__ports-out">
               <div class="graph-port-row graph-port-row--end">
                 <span class="graph-port-label">end</span>
                 <span class="graph-port graph-port--end ${connectingFrom === node.id && connectingFromPort === 'end' ? 'is-connecting' : ''}" data-port="end" title="end — начните линию"></span>
               </div>
-            </div>`;
+            </div>`
+          : isRewardOut
+          ? `<div class="graph-node__ports-out">
+              <div class="graph-port-row graph-port-row--end">
+                <span class="graph-port-label">выполнен</span>
+                <span class="graph-port graph-port--completed ${connectingFrom === node.id && connectingFromPort === 'completed' ? 'is-connecting' : ''}" data-port="completed" title="Выполнен — действие выполнено (в пределах таймера, если он задан)"></span>
+              </div>
+              <div class="graph-port-row graph-port-row--end">
+                <span class="graph-port-label">не выполнен</span>
+                <span class="graph-port graph-port--failed ${connectingFrom === node.id && connectingFromPort === 'failed' ? 'is-connecting' : ''}" data-port="failed" title="Не выполнен — время истекло (только если в триггере задан таймер)"></span>
+              </div>
+            </div>`
+          : '';
 
         const menuBtn = showUnderhood
           ? `<button type="button" class="graph-node__menu" title="Первый слой — внутренний сценарий" aria-label="Показать внутренний сценарий">⋯</button>`
@@ -642,6 +694,7 @@ const GraphEditor = (() => {
   }
 
   function getNodeHeight(node) {
+    if (node?.type === 'start' || node?.type === 'end') return NODE_H_FLOW;
     if (node?.type === 'trigger') return NODE_H_TRIGGER;
     return NODE_H_APPROX;
   }
@@ -840,9 +893,13 @@ const GraphEditor = (() => {
   function createDefaultScenario() {
     nodes = [];
     edges = [];
-    const trigger = addNode('trigger', { x: 40, y: 120, label: 'Ставка', triggerId: null });
-    const bonus = addNode('bonus', { x: 280, y: 120, label: 'Денежный бонус' });
-    edges.push({ id: 'e1', from: trigger.id, fromPort: 'completed', to: bonus.id });
+    const start = addNode('start', { x: 40, y: 120, label: 'Старт' });
+    const trigger = addNode('trigger', { x: 280, y: 120, label: 'Ставка', triggerId: null });
+    const bonus = addNode('bonus', { x: 520, y: 120, label: 'Денежный бонус' });
+    const end = addNode('end', { x: 760, y: 120, label: 'End' });
+    edges.push({ id: 'e1', from: start.id, fromPort: 'end', to: trigger.id });
+    edges.push({ id: 'e2', from: trigger.id, fromPort: 'completed', to: bonus.id });
+    edges.push({ id: 'e3', from: bonus.id, fromPort: 'end', to: end.id });
     selectNode(null);
     render();
   }
