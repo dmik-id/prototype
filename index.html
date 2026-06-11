@@ -542,66 +542,24 @@
                 </div>
 
                 <div class="form-block">
-                  <label class="form-label" for="cash-currencyId">currencyId</label>
+                  <label class="form-label" for="cash-currencyId">Валюта</label>
                   <input class="form-input cash-field" id="cash-currencyId" type="number" data-field="currencyId" placeholder="123" />
                 </div>
                 <div class="form-block cash-formula-field cash-formula-field--fixed" id="cash-amount-block">
-                  <label class="form-label" for="cash-amount">amount (фиксированная сумма)</label>
+                  <label class="form-label" for="cash-amount">Фиксированная сумма</label>
                   <input class="form-input cash-field" id="cash-amount" type="number" data-field="amount" placeholder="10" />
                 </div>
                 <div class="form-block cash-formula-field cash-formula-field--percent hidden" id="cash-percent-block">
                   <label class="form-label" for="cash-percent">Процент, %</label>
                   <input class="form-input cash-field" id="cash-percent" type="number" data-field="percent" min="0" max="100" step="0.1" placeholder="10" />
                 </div>
-                <div class="form-block cash-formula-field cash-formula-field--percent hidden" id="cash-max-payout-block">
-                  <label class="form-label" for="cash-maxPayout">Макс. выплата (опционально)</label>
-                  <input class="form-input cash-field" id="cash-maxPayout" type="number" data-field="maxPayout" placeholder="500" />
+                <div class="form-block">
+                  <label class="form-label" for="cash-allowedPlayerWeights">Допустимые веса игроков</label>
+                  <input class="form-input cash-field" id="cash-allowedPlayerWeights" type="text" data-field="allowedPlayerWeights" placeholder="1, 2, 3" />
                 </div>
                 <div class="form-block">
-                  <label class="form-label" for="cash-expiration">freebetExpirationPediodInHours</label>
-                  <input class="form-input cash-field" id="cash-expiration" type="number" data-field="freebetExpirationPediodInHours" placeholder="120" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-type">type (option)</label>
-                  <select class="form-select cash-field" id="cash-type" data-field="type">
-                    <option value="">Где можно использовать фрибет?</option>
-                    <option value="sport">Спорт</option>
-                    <option value="casino">Казино</option>
-                    <option value="all">Везде</option>
-                  </select>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-allowedBetTypes">allowedBetTypes</label>
-                  <select class="form-select cash-field" id="cash-allowedBetTypes" data-field="allowedBetTypes">
-                    <option value="">Выберите тип ставки</option>
-                    <option value="ordinary">ordinary</option>
-                    <option value="express">express</option>
-                    <option value="all">all</option>
-                  </select>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-minBetRate">minBetRate</label>
-                  <input class="form-input cash-field" id="cash-minBetRate" type="number" step="0.1" data-field="minBetRate" placeholder="0.1" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-maxBetRate">maxBetRate</label>
-                  <input class="form-input cash-field" id="cash-maxBetRate" type="number" step="0.1" data-field="maxBetRate" placeholder="100" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-minBetRateExpress">minBetRateExpress</label>
-                  <input class="form-input cash-field" id="cash-minBetRateExpress" type="number" step="0.1" data-field="minBetRateExpress" placeholder="0.1" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-maxBetRateExpress">maxBetRateExpress</label>
-                  <input class="form-input cash-field" id="cash-maxBetRateExpress" type="number" step="0.1" data-field="maxBetRateExpress" placeholder="100" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-minBetRateOrdinary">minBetRateOrdinary</label>
-                  <input class="form-input cash-field" id="cash-minBetRateOrdinary" type="number" step="0.1" data-field="minBetRateOrdinary" placeholder="0.1" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="cash-maxBetRateOrdinary">maxBetRateOrdinary</label>
-                  <input class="form-input cash-field" id="cash-maxBetRateOrdinary" type="number" step="0.1" data-field="maxBetRateOrdinary" placeholder="100" />
+                  <label class="form-label" for="cash-excludeTags">Теги, при наличии которых игрок будет исключен из программы</label>
+                  <textarea class="form-input form-textarea cash-field" id="cash-excludeTags" data-field="excludeTags" placeholder="fraud, self_excluded"></textarea>
                 </div>
 
                 <div class="bonus-wagering-settings" id="bonus-wagering-settings">
@@ -1109,7 +1067,7 @@
                 <span class="bonus-status__dot bonus-status__dot--incomplete"></span>
                 <span class="bonus-status__text">Не готова к использованию</span>
               </div>
-              <button class="btn btn--primary btn--full" type="button" id="btn-save-wagering" disabled>
+              <button class="btn btn--primary btn--full" type="button" id="btn-save-wagering">
                 Сохранить настройки обкатки
               </button>
             </div>
@@ -1155,11 +1113,6 @@
                 <div class="form-block">
                   <label class="form-label" for="reg-name">Название</label>
                   <input class="form-input registration-field" id="reg-name" type="text" data-field="name" placeholder="Название триггера" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label form-label--optional" for="reg-timeoutHours">Таймер ожидания, ч</label>
-                  <input class="form-input registration-field" id="reg-timeoutHours" type="number" min="1" step="1" data-field="timeoutHours" placeholder="24" />
-                  <p class="form-hint">Опционально. Пустое поле — ждём неограниченное время. Иначе не выполнено в срок → «не выполнен».</p>
                 </div>
                 <div class="bonus-status" id="registration-trigger-status">
                   <span class="bonus-status__dot bonus-status__dot--incomplete"></span>

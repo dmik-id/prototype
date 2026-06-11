@@ -402,15 +402,8 @@ const SEED_BONUSES = [
     name: 'Приветственный кэш',
     currencyId: 123,
     amount: 10,
-    freebetExpirationPediodInHours: 120,
-    type: 'sport',
-    allowedBetTypes: 'all',
-    minBetRate: 1.1,
-    maxBetRate: 100,
-    minBetRateExpress: 1.1,
-    maxBetRateExpress: 100,
-    minBetRateOrdinary: 1.1,
-    maxBetRateOrdinary: 100,
+    allowedPlayerWeights: '1, 2, 3',
+    excludeTags: '',
     hasWagering: 'yes',
     wageringId: 1,
   },
@@ -510,19 +503,6 @@ const SEED_BONUSES = [
 
 const RELOAD_CONFIG_FIELDS = ['currencyId', 'percent', 'maxPayout'];
 
-const CASH_CONFIG_FIELDS_COMMON = [
-  'currencyId',
-  'freebetExpirationPediodInHours',
-  'type',
-  'allowedBetTypes',
-  'minBetRate',
-  'maxBetRate',
-  'minBetRateExpress',
-  'maxBetRateExpress',
-  'minBetRateOrdinary',
-  'maxBetRateOrdinary',
-];
-
 const CASHBACK_CONFIG_FIELDS = ['currencyId', 'percent', 'maxPayout', 'calculationPeriod'];
 
 const bonusFormulaTabs = document.querySelectorAll('#bonus-formula-tabs .bonus-formula-tab');
@@ -612,7 +592,7 @@ const TRIGGER_TIMEOUT_FIELD = 'timeoutHours';
 const TRIGGER_OPTIONAL_FIELDS = [TRIGGER_TIMEOUT_FIELD];
 
 const TRIGGER_CONFIG_FIELDS = {
-  registration: ['name', TRIGGER_TIMEOUT_FIELD],
+  registration: ['name'],
   tg_subscription: ['botUsername', 'target', 'targetId', TRIGGER_TIMEOUT_FIELD],
   pwa_download: ['platform', 'installType', 'versionMin', TRIGGER_TIMEOUT_FIELD],
   deposit: [], // см. getDepositTriggerConfigFields()
@@ -2017,12 +1997,13 @@ function updateCashFormulaFields() {
 }
 
 function getCashConfigFields() {
-  const keys = [...CASH_CONFIG_FIELDS_COMMON];
+  const keys = ['currencyId'];
   if (activeBonusFormula === 'fixed') {
-    keys.splice(1, 0, 'amount');
+    keys.push('amount');
   } else {
-    keys.splice(1, 0, 'percent');
+    keys.push('percent');
   }
+  keys.push('allowedPlayerWeights', 'excludeTags');
   return keys;
 }
 
@@ -2473,11 +2454,34 @@ function buildBonusFromForm(type, data, id, createdAt) {
     );
   }
 
-  const formula = type === 'cash' ? normalizeCashFormula(activeBonusFormula) : 'fixed';
+  if (type === 'cash') {
+    const formula = normalizeCashFormula(activeBonusFormula);
+    const bonus = {
+      id,
+      bonusType: 'cash',
+      formula,
+      createdAt: createdAt || formatDate(),
+      status: 'ready',
+      name: data.name,
+      currencyId: Number(data.currencyId),
+      allowedPlayerWeights: data.allowedPlayerWeights,
+      excludeTags: data.excludeTags,
+    };
+
+    if (formula === 'fixed' && data.amount !== '') {
+      bonus.amount = Number(data.amount);
+    }
+    if (formula !== 'fixed' && data.percent !== '') {
+      bonus.percent = Number(data.percent);
+    }
+
+    return attachBonusWageringFields(bonus, data);
+  }
+
   const bonus = {
     id,
     bonusType: type,
-    formula,
+    formula: 'fixed',
     createdAt: createdAt || formatDate(),
     status: 'ready',
     name: data.name,
@@ -2493,14 +2497,8 @@ function buildBonusFromForm(type, data, id, createdAt) {
     maxBetRateOrdinary: Number(data.maxBetRateOrdinary),
   };
 
-  if (formula === 'fixed' && data.amount !== '') {
+  if (data.amount !== '') {
     bonus.amount = Number(data.amount);
-  }
-  if (formula !== 'fixed' && data.percent !== '') {
-    bonus.percent = Number(data.percent);
-  }
-  if (data.maxPayout !== undefined && data.maxPayout !== '') {
-    bonus.maxPayout = Number(data.maxPayout);
   }
 
   return attachBonusWageringFields(bonus, data);
@@ -2837,8 +2835,12 @@ function buildTriggerFromForm(type, data, id, createdAt) {
     base.minAmount = Number(data.minAmount);
     base.minOdds = Number(data.minOdds);
   }
-  if (data.timeoutHours !== '') {
-    base.timeoutHours = Number(data.timeoutHours);
+  if (type !== 'registration') {
+    if (data.timeoutHours !== '') {
+      base.timeoutHours = Number(data.timeoutHours);
+    } else {
+      delete base.timeoutHours;
+    }
   } else {
     delete base.timeoutHours;
   }
@@ -2881,7 +2883,7 @@ function withTriggerTimeout(summary, trigger) {
 
 function formatTriggerSummary(trigger) {
   const type = trigger.triggerType;
-  if (type === 'registration') return withTriggerTimeout(trigger.name || '—', trigger);
+  if (type === 'registration') return trigger.name || '—';
   if (type === 'tg_subscription') {
     const target = trigger.target ? `${trigger.target}: ` : '';
     return withTriggerTimeout(`${target}${trigger.targetId || '—'}`, trigger);
@@ -3273,9 +3275,10 @@ function isWageringConfigComplete() {
 }
 
 function buildWageringFromForm(data, id, createdAt) {
+  const trimmedName = data.name.trim();
   return {
     id,
-    name: data.name.trim(),
+    name: trimmedName || `Черновик #${id}`,
     accountTypes: data.accountTypes?.length ? data.accountTypes : ['real'],
     status: data.status || 'accepted',
     betCount: data.betCount,
@@ -3326,7 +3329,12 @@ function passesWageringSearch(wagering) {
 
 function updateWageringUI() {
   const complete = isWageringConfigComplete();
-  if (btnSaveWagering) btnSaveWagering.disabled = !complete;
+  if (btnSaveWagering) {
+    btnSaveWagering.disabled = false;
+    btnSaveWagering.textContent = editingWageringId
+      ? 'Обновить настройки обкатки'
+      : 'Сохранить настройки обкатки';
+  }
   if (!wageringStatusBlock) return;
 
   wageringStatusBlock.classList.toggle('bonus-status--ready', complete);
@@ -3341,7 +3349,9 @@ function updateWageringUI() {
       ? editingWageringId
         ? `Обкатка #${editingWageringId} готова к использованию`
         : 'Готова к сохранению'
-      : 'Не готова к использованию';
+      : editingWageringId
+        ? `Обкатка #${editingWageringId} — черновик, можно сохранить`
+        : 'Черновик — можно сохранить';
   }
 }
 
@@ -3395,8 +3405,6 @@ function renderWageringsTable() {
 }
 
 function saveWagering() {
-  if (!isWageringConfigComplete()) return;
-
   const data = getWageringFormData();
   let wagering;
 
@@ -3423,10 +3431,12 @@ function saveWagering() {
     row.classList.add('selected');
   }
 
+  updateWageringUI();
   if (wageringStatusBlock) {
-    wageringStatusBlock.classList.add('bonus-status--ready');
+    const suffix =
+      wagering.statusReady === 'ready' ? ' и доступна к использованию' : ' как черновик';
     wageringStatusBlock.querySelector('.bonus-status__text').textContent =
-      `Обкатка #${wagering.id} сохранена${wagering.statusReady === 'ready' ? ' и доступна к использованию' : ''}`;
+      `Обкатка #${wagering.id} сохранена${suffix}`;
   }
 }
 

@@ -428,7 +428,8 @@ const GraphEditor = (() => {
     const trigger = getTriggers().find((t) => t.id === triggerId);
     if (!trigger) return `Триггер #${triggerId}`;
     const typeLabel = TRIGGER_TYPE_LABELS[trigger.triggerType] || trigger.triggerType;
-    const timer = triggerTimeoutPart(trigger);
+    const timer =
+      trigger.triggerType === 'registration' ? '' : triggerTimeoutPart(trigger);
     if (trigger.triggerType === 'deposit') {
       return `${typeLabel} #${trigger.id} · ${depositTriggerShort(trigger)}${timer}`;
     }
