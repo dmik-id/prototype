@@ -49,9 +49,17 @@ body {
 
 .sidebar__logo {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
-  padding: 0 16px 24px;
+  padding: 0 16px 20px;
+}
+
+.sidebar__logo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .sidebar__logo-icon {
@@ -65,11 +73,62 @@ body {
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .sidebar__logo-text {
   font-weight: 600;
   font-size: 13px;
+}
+
+.sidebar__instance-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__instance-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.instance-switcher {
+  display: flex;
+  gap: 4px;
+}
+
+.instance-switcher__btn {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.instance-switcher__btn:hover {
+  background: #f5f6f8;
+  color: var(--text);
+}
+
+.instance-switcher__btn--active {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+}
+
+.instance-switcher__btn--active:hover {
+  background: #2a2f38;
+  color: #fff;
 }
 
 .sidebar__nav {
@@ -739,9 +798,36 @@ body {
 }
 
 .bonus-type-tab.is-disabled,
-.bonus-formula-tab.is-disabled {
-  opacity: 0.4;
+.bonus-formula-tab.is-disabled,
+.trigger-type-tab.is-disabled {
+  opacity: 0.55;
   pointer-events: none;
+  cursor: not-allowed;
+}
+
+.trigger-type-tab--soon {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.trigger-type-tab__label {
+  line-height: 1.2;
+}
+
+.trigger-type-tab__soon {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.trigger-type-tab--soon:hover {
+  border-color: var(--border);
+  color: var(--text-muted);
 }
 
 .bonus-panel__title,

@@ -581,6 +581,26 @@ const TRIGGER_TYPE_LABELS = {
   bet: 'Ставка',
 };
 
+const INSTANCE_TRIGGER_TYPES = {
+  BY: [
+    { type: 'identification' },
+    { type: 'deposit' },
+    { type: 'bet', soon: true },
+  ],
+  KZ: [
+    { type: 'identification' },
+    { type: 'deposit' },
+    { type: 'bet', soon: true },
+  ],
+  ST: [
+    { type: 'registration' },
+    { type: 'deposit' },
+    { type: 'tg_subscription', label: 'Подписка', soon: true },
+    { type: 'pwa_download', soon: true },
+    { type: 'bet', soon: true },
+  ],
+};
+
 const CONFIGURED_TRIGGER_TYPES = [
   'registration',
   'identification',
@@ -761,6 +781,636 @@ let nextWageringId = 1;
 let triggerFilter = 'all';
 let promoInlineTriggerCreate = false;
 let attachedPromoTriggerNodeId = null;
+
+const INSTANCE_IDS = ['BY', 'KZ', 'ST'];
+
+const INSTANCE_LABELS = {
+  BY: 'Беларусь',
+  KZ: 'Казахстан',
+  ST: 'Спорт',
+};
+
+const SEED_TRIGGERS_BY = [
+  {
+    id: 1,
+    triggerType: 'identification',
+    createdAt: '27.03.26 - 09:08:54',
+    status: 'ready',
+    name: 'Идентификация BY',
+  },
+  {
+    id: 2,
+    triggerType: 'deposit',
+    createdAt: '28.03.26 - 11:00:00',
+    status: 'ready',
+    depositMode: 'threshold',
+    currencyId: 123,
+    minDepositAmount: 50,
+  },
+];
+
+const SEED_TRIGGERS_KZ = [
+  {
+    id: 1,
+    triggerType: 'identification',
+    createdAt: '15.04.26 - 10:00:00',
+    status: 'ready',
+    name: 'Идентификация KZ',
+  },
+  {
+    id: 2,
+    triggerType: 'bet',
+    createdAt: '16.04.26 - 12:30:00',
+    status: 'ready',
+    minAmount: 1000,
+    minOdds: 1.4,
+    allowedBetTypes: 'express',
+    timeoutHours: 72,
+  },
+];
+
+const SEED_TRIGGERS_ST = [
+  {
+    id: 1,
+    triggerType: 'bet',
+    createdAt: '01.05.26 - 08:00:00',
+    status: 'ready',
+    minAmount: 500,
+    minOdds: 1.5,
+    allowedBetTypes: 'any',
+    timeoutHours: 48,
+  },
+  {
+    id: 2,
+    triggerType: 'pwa_download',
+    createdAt: '02.05.26 - 14:00:00',
+    status: 'ready',
+    platform: 'android',
+    installType: 'pwa',
+    versionMin: '1.0',
+    timeoutHours: 168,
+  },
+];
+
+const SEED_PROMOTIONS_KZ = [
+  {
+    id: 1,
+    name: 'KZ Welcome Quest',
+    type: 'quest',
+    createdAt: '15.04.26 - 10:00:00',
+    startAt: '15.04.26 - 10:00:00',
+    endAt: '31.12.26 - 23:59:59',
+    status: 'active',
+    scenario: null,
+    userIds: [],
+  },
+  {
+    id: 2,
+    name: 'KZ Депозитный бонус',
+    type: 'bonus',
+    createdAt: '16.04.26 - 12:00:00',
+    startAt: '16.04.26 - 12:00:00',
+    endAt: '30.06.26 - 23:59:59',
+    status: 'draft',
+    scenario: null,
+    userIds: [],
+  },
+  {
+    id: 3,
+    name: 'KZ VIP Cashback',
+    type: 'loyalty',
+    loyaltyProgramId: 'vip_club',
+    createdAt: '20.04.26 - 09:00:00',
+    startAt: '01.05.26 - 00:00:00',
+    endAt: '31.12.26 - 23:59:59',
+    status: 'draft',
+    scenario: {
+      nodes: [
+        { id: 'n1', type: 'start', x: 40, y: 120, label: 'Старт', triggerId: null, bonusId: null },
+        { id: 'n2', type: 'trigger', x: 280, y: 120, label: 'Ставка', triggerId: 2, bonusId: null },
+        { id: 'n3', type: 'bonus', x: 520, y: 120, label: 'KZ Кэшбэк', triggerId: null, bonusId: 4 },
+        { id: 'n4', type: 'end', x: 760, y: 120, label: 'End', triggerId: null, bonusId: null },
+      ],
+      edges: [
+        { id: 'e1', from: 'n1', fromPort: 'end', to: 'n2' },
+        { id: 'e2', from: 'n2', fromPort: 'completed', to: 'n3' },
+        { id: 'e3', from: 'n3', fromPort: 'end', to: 'n4' },
+      ],
+    },
+    userIds: [],
+  },
+];
+
+const SEED_PROMOTIONS_ST = [
+  {
+    id: 1,
+    name: 'ST Sport Welcome',
+    type: 'quest',
+    createdAt: '01.05.26 - 08:00:00',
+    startAt: '01.05.26 - 08:00:00',
+    endAt: '31.08.26 - 23:59:59',
+    status: 'active',
+    scenario: null,
+    userIds: [],
+  },
+  {
+    id: 2,
+    name: 'ST Express Challenge',
+    type: 'bonus',
+    createdAt: '02.05.26 - 14:00:00',
+    startAt: '02.05.26 - 14:00:00',
+    endAt: '30.09.26 - 23:59:59',
+    status: 'active',
+    scenario: {
+      nodes: [
+        { id: 'n1', type: 'start', x: 40, y: 120, label: 'Старт', triggerId: null, bonusId: null },
+        { id: 'n2', type: 'trigger', x: 280, y: 120, label: 'Ставка', triggerId: 1, bonusId: null },
+        { id: 'n3', type: 'bonus', x: 520, y: 120, label: 'ST FB', triggerId: null, bonusId: 3 },
+        { id: 'n4', type: 'end', x: 760, y: 120, label: 'End', triggerId: null, bonusId: null },
+      ],
+      edges: [
+        { id: 'e1', from: 'n1', fromPort: 'end', to: 'n2' },
+        { id: 'e2', from: 'n2', fromPort: 'completed', to: 'n3' },
+        { id: 'e3', from: 'n3', fromPort: 'end', to: 'n4' },
+      ],
+    },
+    userIds: [],
+  },
+  {
+    id: 3,
+    name: 'ST PWA Install Bonus',
+    type: 'bonus',
+    createdAt: '05.05.26 - 11:00:00',
+    startAt: '05.05.26 - 11:00:00',
+    endAt: '31.12.26 - 23:59:59',
+    status: 'draft',
+    scenario: null,
+    userIds: [],
+  },
+];
+
+const SEED_BONUSES_KZ = [
+  {
+    id: 1,
+    bonusType: 'cash',
+    formula: 'fixed',
+    createdAt: '15.04.26 - 10:00:00',
+    status: 'ready',
+    name: 'KZ Стартовый кэш',
+    currencyId: 398,
+    amount: 5000,
+    allowedPlayerWeights: '1, 2',
+    excludeTags: '',
+    hasWagering: 'yes',
+    wageringId: 1,
+  },
+  {
+    id: 2,
+    bonusType: 'fs',
+    formula: 'fixed',
+    createdAt: '15.04.26 - 10:00:00',
+    status: 'ready',
+    name: 'KZ Freespins',
+    freespinCurrencyId: 398,
+    winningsCurrencyId: 398,
+    gameSelectionPeriodInHours: 24,
+    spinPeriodInHours: 72,
+    freespinCount: 50,
+    freespinAmount: 50,
+    maxWinnings: 10000,
+    freespinType: 'fixed_count',
+    casinoGameIds: '301, 302',
+    allowedPlayerWeights: '1, 2',
+    excludeTags: '',
+    instantWinnings: 'yes',
+    skksBonusType: 'freespin',
+    awardReason: 'welcome_bonus',
+    level: 1,
+    validityPeriod: 168,
+  },
+  {
+    id: 3,
+    bonusType: 'fb',
+    formula: 'fixed',
+    createdAt: '16.04.26 - 12:00:00',
+    status: 'ready',
+    name: 'KZ Freebet',
+    currencyId: 398,
+    amount: 2000,
+    freebetExpirationPediodInHours: 48,
+    type: 'sport',
+    allowedBetTypes: 'express',
+    minBetRate: 1.4,
+    maxBetRate: 50,
+    minBetRateExpress: 1.4,
+    maxBetRateExpress: 50,
+    minBetRateOrdinary: 1.4,
+    maxBetRateOrdinary: 50,
+  },
+  {
+    id: 4,
+    bonusType: 'cashback',
+    formula: 'percent',
+    createdAt: '20.04.26 - 09:00:00',
+    status: 'ready',
+    name: 'KZ VIP Кэшбэк',
+    currencyId: 398,
+    percent: 10,
+    maxPayout: 50000,
+    calculationPeriod: 'week',
+  },
+];
+
+const SEED_BONUSES_ST = [
+  {
+    id: 1,
+    bonusType: 'cash',
+    formula: 'fixed',
+    createdAt: '01.05.26 - 08:00:00',
+    status: 'ready',
+    name: 'ST Welcome Cash',
+    currencyId: 840,
+    amount: 25,
+    allowedPlayerWeights: '1, 2, 3',
+    excludeTags: '',
+    hasWagering: 'yes',
+    wageringId: 1,
+  },
+  {
+    id: 2,
+    bonusType: 'fs',
+    formula: 'fixed',
+    createdAt: '01.05.26 - 08:00:00',
+    status: 'ready',
+    name: 'ST Casino FS',
+    freespinCurrencyId: 840,
+    winningsCurrencyId: 840,
+    gameSelectionPeriodInHours: 12,
+    spinPeriodInHours: 48,
+    freespinCount: 10,
+    freespinAmount: 50,
+    maxWinnings: 2500,
+    freespinType: 'fixed_count',
+    casinoGameIds: '501',
+    allowedPlayerWeights: '1, 2',
+    excludeTags: '',
+    instantWinnings: 'no',
+    skksBonusType: 'freespin',
+    awardReason: 'sport_promo',
+    level: 1,
+    validityPeriod: 72,
+  },
+  {
+    id: 3,
+    bonusType: 'fb',
+    formula: 'fixed',
+    createdAt: '02.05.26 - 14:00:00',
+    status: 'ready',
+    name: 'ST Express FB',
+    currencyId: 840,
+    amount: 20,
+    freebetExpirationPediodInHours: 24,
+    type: 'sport',
+    allowedBetTypes: 'express',
+    minBetRate: 1.5,
+    maxBetRate: 30,
+    minBetRateExpress: 1.5,
+    maxBetRateExpress: 30,
+    minBetRateOrdinary: 1.5,
+    maxBetRateOrdinary: 30,
+  },
+  {
+    id: 4,
+    bonusType: 'bonus_pack',
+    packType: 'wheel',
+    formula: 'fixed',
+    createdAt: '05.05.26 - 11:00:00',
+    status: 'ready',
+    name: 'ST PWA Wheel',
+    pool: [
+      { bonusId: 1, probability: 50 },
+      { bonusId: 3, probability: 50 },
+    ],
+  },
+];
+
+const SEED_VIP_TIERS_KZ = [
+  {
+    id: 'bronze',
+    label: 'KZ Bronze',
+    sortOrder: 1,
+    progression: { criterion: 'deposit', thresholdMin: 0 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: { criterion: 'deposit', dropStep: 10000, bonusId: 2, scope: 'within_tier' },
+  },
+  {
+    id: 'silver',
+    label: 'KZ Silver',
+    sortOrder: 2,
+    progression: { criterion: 'deposit', thresholdMin: 100000 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: { criterion: 'deposit', dropStep: 25000, bonusId: 2, scope: 'within_tier' },
+  },
+];
+
+const SEED_VIP_TIERS_ST = [
+  {
+    id: 'rookie',
+    label: 'Rookie',
+    sortOrder: 1,
+    progression: { criterion: 'drop', thresholdMin: 0 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: { criterion: 'drop', dropStep: 10000, bonusId: 3, scope: 'within_tier' },
+  },
+  {
+    id: 'pro',
+    label: 'Pro',
+    sortOrder: 2,
+    progression: { criterion: 'drop', thresholdMin: 100000 },
+    lvlUpBonusId: 3,
+    stepRewardAccrual: { criterion: 'drop', dropStep: 50000, bonusId: 4, scope: 'within_tier' },
+  },
+  {
+    id: 'legend',
+    label: 'Legend',
+    sortOrder: 3,
+    progression: { criterion: 'drop', thresholdMin: 500000 },
+    lvlUpBonusId: null,
+    stepRewardAccrual: { criterion: 'drop', dropStep: 100000, bonusId: 4, scope: 'within_tier' },
+  },
+];
+
+const instanceSwitcher = document.getElementById('instance-switcher');
+const sidebarInstanceBadge = document.getElementById('sidebar-instance-badge');
+
+let currentInstanceId = 'BY';
+const instanceStore = {};
+
+function cloneBonusesList(list) {
+  return list.map((b) => ({
+    ...b,
+    pool: b.pool ? b.pool.map((entry) => ({ ...entry })) : undefined,
+    bonuses: b.bonuses ? b.bonuses.map((entry) => ({ ...entry })) : undefined,
+  }));
+}
+
+function clonePromotionsList(list) {
+  return list.map((p) => ({
+    ...p,
+    userIds: [...(p.userIds || [])],
+    scenario: p.scenario
+      ? {
+          nodes: p.scenario.nodes.map((n) => ({ ...n })),
+          edges: p.scenario.edges.map((e) => ({ ...e })),
+        }
+      : null,
+  }));
+}
+
+function cloneVipTiersList(list) {
+  return list.map((t) => ({
+    ...t,
+    progression: { ...t.progression },
+    stepRewardAccrual: normalizeStepRewardAccrual(t.stepRewardAccrual || t.lootboxAccrual),
+  }));
+}
+
+function cloneTriggersList(list) {
+  return list.map((t) => ({ ...t }));
+}
+
+function cloneWageringsList(list) {
+  return list.map((w) => ({ ...w }));
+}
+
+function nextIdFromList(list, key = 'id') {
+  return list.reduce((max, item) => Math.max(max, item[key] || 0), 0) + 1;
+}
+
+function buildInstanceSeed(instanceId) {
+  const seeds = {
+    BY: {
+      promotions: SEED_PROMOTIONS,
+      bonuses: SEED_BONUSES,
+      triggers: SEED_TRIGGERS_BY,
+      wagerings: SEED_WAGERINGS,
+      vipProgram: SEED_VIP_PROGRAM,
+      vipTiers: SEED_VIP_TIERS,
+    },
+    KZ: {
+      promotions: SEED_PROMOTIONS_KZ,
+      bonuses: SEED_BONUSES_KZ,
+      triggers: SEED_TRIGGERS_KZ,
+      wagerings: SEED_WAGERINGS,
+      vipProgram: { ...SEED_VIP_PROGRAM, id: 'vip_club_kz' },
+      vipTiers: SEED_VIP_TIERS_KZ,
+    },
+    ST: {
+      promotions: SEED_PROMOTIONS_ST,
+      bonuses: SEED_BONUSES_ST,
+      triggers: SEED_TRIGGERS_ST,
+      wagerings: SEED_WAGERINGS,
+      vipProgram: { ...SEED_VIP_PROGRAM, id: 'vip_club_st', defaultTierId: 'rookie' },
+      vipTiers: SEED_VIP_TIERS_ST,
+    },
+  };
+
+  const seed = seeds[instanceId];
+  const promotions = clonePromotionsList(seed.promotions);
+  const bonuses = cloneBonusesList(seed.bonuses);
+  const triggers = cloneTriggersList(seed.triggers);
+  const wagerings = cloneWageringsList(seed.wagerings);
+
+  return {
+    promotions,
+    bonuses,
+    triggers,
+    wagerings,
+    vipProgram: { ...seed.vipProgram },
+    vipTiers: cloneVipTiersList(seed.vipTiers),
+    nextPromoId: nextIdFromList(promotions),
+    nextBonusId: nextIdFromList(bonuses),
+    nextTriggerId: nextIdFromList(triggers),
+    nextWageringId: nextIdFromList(wagerings),
+  };
+}
+
+function snapshotCurrentInstanceState() {
+  return {
+    promotions: clonePromotionsList(promotions),
+    bonuses: cloneBonusesList(bonuses),
+    triggers: cloneTriggersList(triggers),
+    wagerings: cloneWageringsList(wagerings),
+    vipProgram: { ...vipProgram },
+    vipTiers: cloneVipTiersList(vipTiers),
+    nextPromoId,
+    nextBonusId,
+    nextTriggerId,
+    nextWageringId,
+  };
+}
+
+function applyInstanceState(state) {
+  promotions = state.promotions;
+  bonuses = state.bonuses;
+  triggers = state.triggers;
+  wagerings = state.wagerings;
+  vipProgram = state.vipProgram;
+  vipTiers = state.vipTiers;
+  nextPromoId = state.nextPromoId;
+  nextBonusId = state.nextBonusId;
+  nextTriggerId = state.nextTriggerId;
+  nextWageringId = state.nextWageringId;
+}
+
+function resetEditingStateOnInstanceSwitch() {
+  selectedPromoRow = null;
+  selectedBonusRow = null;
+  selectedWageringRow = null;
+  selectedTriggerRow = null;
+  editingBonusId = null;
+  editingWageringId = null;
+  editingTriggerId = null;
+  editingPromoId = null;
+  promoUserIds = [];
+  promoInlineTriggerCreate = false;
+  attachedPromoTriggerNodeId = null;
+  promoInlineTriggerBar?.classList.add('hidden');
+  setPromoTriggerPickerVisible(true);
+  closePanel();
+}
+
+function updateInstanceSwitcherUI() {
+  instanceSwitcher?.querySelectorAll('[data-instance]').forEach((btn) => {
+    const active = btn.dataset.instance === currentInstanceId;
+    btn.classList.toggle('instance-switcher__btn--active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  if (sidebarInstanceBadge) sidebarInstanceBadge.textContent = currentInstanceId;
+}
+
+function getInstanceTriggerTypeConfig(instanceId = currentInstanceId) {
+  return INSTANCE_TRIGGER_TYPES[instanceId] || [];
+}
+
+function getInstanceTriggerTypeEntry(type, instanceId = currentInstanceId) {
+  return getInstanceTriggerTypeConfig(instanceId).find((entry) => entry.type === type);
+}
+
+function isTriggerTypeVisibleForInstance(type, instanceId = currentInstanceId) {
+  return !!getInstanceTriggerTypeEntry(type, instanceId);
+}
+
+function isTriggerTypeEnabledForInstance(type, instanceId = currentInstanceId) {
+  const entry = getInstanceTriggerTypeEntry(type, instanceId);
+  return !!entry && !entry.soon;
+}
+
+function getTriggerTypeLabel(type, instanceId = currentInstanceId) {
+  const entry = getInstanceTriggerTypeEntry(type, instanceId);
+  if (entry?.label) return entry.label;
+  return TRIGGER_TYPE_LABELS[type] || type;
+}
+
+function getDefaultTriggerTypeForInstance(instanceId = currentInstanceId) {
+  const config = getInstanceTriggerTypeConfig(instanceId);
+  const enabled = config.find((entry) => !entry.soon);
+  return enabled?.type || config[0]?.type || 'deposit';
+}
+
+function renderTriggerTypeTabLabel(tab, entry) {
+  const label = entry.label || TRIGGER_TYPE_LABELS[entry.type] || entry.type;
+  if (entry.soon) {
+    tab.innerHTML = `<span class="trigger-type-tab__label">${label}</span><span class="trigger-type-tab__soon">будет позже</span>`;
+    return;
+  }
+  tab.textContent = label;
+}
+
+function updateTriggerTypesForInstance() {
+  const config = getInstanceTriggerTypeConfig();
+  const visibleTypes = new Set(config.map((entry) => entry.type));
+
+  triggerTypeTabs.forEach((tab) => {
+    const type = tab.dataset.triggerType;
+    const entry = getInstanceTriggerTypeEntry(type);
+    const visible = visibleTypes.has(type);
+    tab.classList.toggle('hidden', !visible);
+    if (!visible) return;
+
+    const soon = !!entry.soon;
+    tab.disabled = soon;
+    tab.classList.toggle('trigger-type-tab--soon', soon);
+    tab.classList.toggle('is-disabled', soon);
+    renderTriggerTypeTabLabel(tab, entry);
+  });
+
+  document.querySelectorAll('#trigger-filters .filter-tab[data-trigger-filter]').forEach((tab) => {
+    const filter = tab.dataset.triggerFilter;
+    if (['all', 'ready', 'draft'].includes(filter)) return;
+    tab.classList.toggle('hidden', !visibleTypes.has(filter));
+    tab.textContent = getTriggerTypeLabel(filter);
+  });
+
+  if (
+    triggerFilter !== 'all' &&
+    triggerFilter !== 'ready' &&
+    triggerFilter !== 'draft' &&
+    !visibleTypes.has(triggerFilter)
+  ) {
+    triggerFilter = 'all';
+    document.querySelectorAll('#trigger-filters .filter-tab').forEach((tab) => {
+      tab.classList.toggle('filter-tab--active', tab.dataset.triggerFilter === 'all');
+    });
+  }
+
+  if (graphTriggerHint) {
+    const labels = config
+      .filter((entry) => !entry.soon)
+      .map((entry) => (entry.label || TRIGGER_TYPE_LABELS[entry.type]).toLowerCase());
+    graphTriggerHint.textContent = `Доступны сохранённые триггеры: ${labels.join(', ')}.`;
+  }
+}
+
+function refreshUIAfterInstanceSwitch() {
+  switchBonusFormula('fixed');
+  switchBonusType('cash');
+  clearBonusWageringForm();
+  switchDepositTriggerMode('from_deposit');
+  updateTriggerTypesForInstance();
+  switchTriggerType(getDefaultTriggerTypeForInstance());
+  updateBonusUI();
+  updateTriggerUI();
+  refreshGraphBonusSelect();
+  refreshGraphTriggerSelect();
+  renderBonusesTable();
+  renderWageringsTable();
+  renderTriggersTable();
+  renderVipTiersTable();
+  renderPromotionsTable();
+  GraphEditor.refreshTriggerNodes();
+  if (pageSection === 'promo') {
+    requestAnimationFrame(() => GraphEditor.render());
+  }
+  updateInstanceSwitcherUI();
+}
+
+function switchInstance(instanceId) {
+  if (!INSTANCE_IDS.includes(instanceId) || instanceId === currentInstanceId) return;
+  instanceStore[currentInstanceId] = snapshotCurrentInstanceState();
+  currentInstanceId = instanceId;
+  applyInstanceState(instanceStore[instanceId]);
+  resetEditingStateOnInstanceSwitch();
+  refreshUIAfterInstanceSwitch();
+}
+
+function initInstanceStore() {
+  INSTANCE_IDS.forEach((id) => {
+    instanceStore[id] = buildInstanceSeed(id);
+  });
+  currentInstanceId = 'BY';
+  applyInstanceState(instanceStore.BY);
+}
 
 function formatDate() {
   const d = new Date();
@@ -1084,7 +1734,7 @@ function enterPromoInlineTriggerCreate() {
   promoInlineTriggerCreate = true;
   editingTriggerId = null;
   CONFIGURED_TRIGGER_TYPES.forEach(clearTriggerForm);
-  switchTriggerType('registration');
+  switchTriggerType(getDefaultTriggerTypeForInstance());
   updateTriggerUI();
   promoInlineTriggerBar?.classList.remove('hidden');
   setPromoTriggerPickerVisible(false);
@@ -1183,11 +1833,11 @@ function openTriggerPanel({ isNew, triggerId }) {
 
   if (isNew) {
     CONFIGURED_TRIGGER_TYPES.forEach(clearTriggerForm);
-    switchTriggerType('registration');
+    switchTriggerType(getDefaultTriggerTypeForInstance());
   } else {
     const trigger = triggers.find((t) => t.id === editingTriggerId);
     if (trigger) {
-      switchTriggerType(trigger.triggerType);
+      switchTriggerType(trigger.triggerType, { force: true });
       if (CONFIGURED_TRIGGER_TYPES.includes(trigger.triggerType)) {
         loadTriggerForm(trigger.triggerType, trigger);
       }
@@ -2651,7 +3301,7 @@ function buildLvlUpBonusSelectOptions(selectedId) {
 }
 
 function getDepositTriggerConfigFields(mode = activeDepositTriggerMode) {
-  const base = ['currencyId', 'depositType', 'depositCount', 'accountingDepth', TRIGGER_TIMEOUT_FIELD];
+  const base = ['currencyId', TRIGGER_TIMEOUT_FIELD];
   if (mode === 'threshold') {
     return ['availableWeights', 'prohibitingTags', 'minDepositAmount', ...base];
   }
@@ -2691,7 +3341,10 @@ function switchDepositTriggerMode(mode) {
   updateTriggerUI();
 }
 
-function switchTriggerType(type) {
+function switchTriggerType(type, { force = false } = {}) {
+  if (!isTriggerTypeVisibleForInstance(type)) return;
+  if (!force && !isTriggerTypeEnabledForInstance(type)) return;
+
   activeTriggerType = type;
   triggerTypeTabs.forEach((tab) => {
     tab.classList.toggle('trigger-type-tab--active', tab.dataset.triggerType === type);
@@ -2766,8 +3419,6 @@ const DEPOSIT_TRIGGER_NUMERIC_FIELDS = [
   'maxDepositAmount',
   'minDepositAmount',
   'currencyId',
-  'depositCount',
-  'accountingDepth',
 ];
 
 function isTriggerConfigComplete(type, data = getTriggerFormData(type)) {
@@ -2808,9 +3459,6 @@ function isTriggerConfigComplete(type, data = getTriggerFormData(type)) {
       if (key === 'minDepositAmount' && activeDepositTriggerMode === 'threshold' && num <= 0) {
         return false;
       }
-      if (['depositCount', 'accountingDepth'].includes(key)) {
-        return Number.isInteger(num) && num >= 1;
-      }
       return true;
     }
     return true;
@@ -2828,8 +3476,6 @@ function buildTriggerFromForm(type, data, id, createdAt) {
   if (type === 'deposit') {
     base.depositMode = activeDepositTriggerMode;
     base.currencyId = Number(data.currencyId);
-    base.depositCount = Number(data.depositCount);
-    base.accountingDepth = Number(data.accountingDepth);
     if (data.minDepositAmount !== '') {
       base.minDepositAmount = Number(data.minDepositAmount);
     }
@@ -2904,12 +3550,10 @@ function formatTriggerSummary(trigger) {
     const mode = resolveDepositTriggerMode(trigger);
     const modeLabel = DEPOSIT_TRIGGER_MODE_LABELS[mode] || mode;
     const currency = trigger.currencyId ?? '—';
-    const count = trigger.depositCount ?? trigger.minDepositNumber;
-    const countPart = count ? `, ${count} деп.` : '';
     if (mode === 'threshold') {
       const min = trigger.minDepositAmount ?? trigger.minAmount ?? '—';
       return withTriggerTimeout(
-        `${modeLabel}: от ${min} (валюта ${currency})${countPart}`,
+        `${modeLabel}: от ${min} (валюта ${currency})`,
         trigger
       );
     }
@@ -2924,7 +3568,7 @@ function formatTriggerSummary(trigger) {
             ? `до ${max}`
             : 'любая сумма';
     return withTriggerTimeout(
-      `${modeLabel}: ${bounds} (валюта ${currency})${countPart}`,
+      `${modeLabel}: ${bounds} (валюта ${currency})`,
       trigger
     );
   }
@@ -2935,7 +3579,7 @@ function formatTriggerSummary(trigger) {
 }
 
 function formatTriggerLabel(trigger) {
-  const typeLabel = TRIGGER_TYPE_LABELS[trigger.triggerType] || trigger.triggerType;
+  const typeLabel = getTriggerTypeLabel(trigger.triggerType);
   return `${typeLabel} #${trigger.id} — ${formatTriggerSummary(trigger)}`;
 }
 
@@ -3064,7 +3708,7 @@ function renderTriggersTable() {
 
     tr.innerHTML = `
       <td>${trigger.id}</td>
-      <td>${TRIGGER_TYPE_LABELS[trigger.triggerType] || trigger.triggerType}</td>
+      <td>${getTriggerTypeLabel(trigger.triggerType)}</td>
       <td>${formatTriggerSummary(trigger)}</td>
       <td>${trigger.createdAt}</td>
       <td><span class="status ${statusClass}">${statusLabel}</span></td>
@@ -3688,7 +4332,11 @@ bonusHasWageringSelect?.addEventListener('change', updateBonusUI);
 bonusWageringIdSelect?.addEventListener('change', updateBonusUI);
 
 triggerTypeTabs.forEach((tab) => {
-  tab.addEventListener('click', () => switchTriggerType(tab.dataset.triggerType));
+  tab.addEventListener('click', () => {
+    if (!tab.classList.contains('is-disabled')) {
+      switchTriggerType(tab.dataset.triggerType);
+    }
+  });
 });
 
 depositModeTabs.forEach((tab) => {
@@ -3760,26 +4408,14 @@ GraphEditor.init({
   getTriggers: () => triggers,
 });
 
-promotions = SEED_PROMOTIONS.map((p) => ({ ...p }));
-nextPromoId = promotions.reduce((max, p) => Math.max(max, p.id), 0) + 1;
-bonuses = SEED_BONUSES.map((b) => ({
-  ...b,
-  pool: b.pool ? b.pool.map((entry) => ({ ...entry })) : undefined,
-}));
-nextBonusId = bonuses.reduce((max, b) => Math.max(max, b.id), 0) + 1;
-wagerings = SEED_WAGERINGS.map((w) => ({ ...w }));
-nextWageringId = wagerings.reduce((max, w) => Math.max(max, w.id), 0) + 1;
-vipProgram = { ...SEED_VIP_PROGRAM };
-vipTiers = SEED_VIP_TIERS.map((t) => ({
-  ...t,
-  progression: { ...t.progression },
-  stepRewardAccrual: normalizeStepRewardAccrual(t.stepRewardAccrual || t.lootboxAccrual),
-}));
+initInstanceStore();
+updateInstanceSwitcherUI();
 switchBonusFormula('fixed');
 switchBonusType('cash');
 clearBonusWageringForm();
 switchDepositTriggerMode('from_deposit');
-switchTriggerType('registration');
+updateTriggerTypesForInstance();
+switchTriggerType(getDefaultTriggerTypeForInstance());
 updateBonusUI();
 updateTriggerUI();
 refreshGraphBonusSelect();
@@ -3900,4 +4536,10 @@ vipProgressionEditor?.addEventListener('click', (e) => {
       renderVipTiersTable();
     }
   }
+});
+
+instanceSwitcher?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-instance]');
+  if (!btn) return;
+  switchInstance(btn.dataset.instance);
 });

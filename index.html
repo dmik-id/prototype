@@ -13,8 +13,18 @@
   <div class="app">
     <aside class="sidebar">
       <div class="sidebar__logo">
-        <span class="sidebar__logo-icon">PL</span>
-        <span class="sidebar__logo-text">Admin Platform</span>
+        <span class="sidebar__logo-icon" id="sidebar-instance-badge">BY</span>
+        <div class="sidebar__logo-meta">
+          <span class="sidebar__logo-text">Admin Platform</span>
+          <div class="sidebar__instance-settings">
+            <span class="sidebar__instance-label">Инстанс</span>
+            <div class="instance-switcher" id="instance-switcher" role="radiogroup" aria-label="Инстанс">
+              <button type="button" class="instance-switcher__btn instance-switcher__btn--active" data-instance="BY" aria-pressed="true">BY</button>
+              <button type="button" class="instance-switcher__btn" data-instance="KZ" aria-pressed="false">KZ</button>
+              <button type="button" class="instance-switcher__btn" data-instance="ST" aria-pressed="false">ST</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <nav class="sidebar__nav">
@@ -1249,23 +1259,6 @@
                 <div class="form-block">
                   <label class="form-label" for="dep-currencyId">Валюта</label>
                   <input class="form-input deposit-field" id="dep-currencyId" type="number" data-field="currencyId" placeholder="123" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="dep-depositType">Тип депозита</label>
-                  <select class="form-select deposit-field" id="dep-depositType" data-field="depositType">
-                    <option value="">Выберите тип</option>
-                    <option value="first">Первый</option>
-                    <option value="repeat">Повторный</option>
-                    <option value="any">Любой</option>
-                  </select>
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="dep-depositCount">Количество</label>
-                  <input class="form-input deposit-field" id="dep-depositCount" type="number" min="1" step="1" data-field="depositCount" placeholder="1" />
-                </div>
-                <div class="form-block">
-                  <label class="form-label" for="dep-accountingDepth">Глубина учёта</label>
-                  <input class="form-input deposit-field" id="dep-accountingDepth" type="number" min="1" step="1" data-field="accountingDepth" placeholder="1" />
                 </div>
                 <div class="form-block">
                   <label class="form-label form-label--optional" for="dep-timeoutHours">Таймер ожидания, ч</label>
