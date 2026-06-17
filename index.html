@@ -61,7 +61,7 @@
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="bonus">Настройка бонуса</a>
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="wagering">Настройки обкатки</a>
                 <a href="#" class="nav-sub nav-sub--nested" data-page-section="trigger">Настройка триггера</a>
-                <a href="#" class="nav-sub nav-sub--nested" data-page-section="vip">VIP Club</a>
+                <a href="#" class="nav-sub nav-sub--nested" data-page-section="vip">Программа лояльности</a>
               </div>
             </div>
           </div>
@@ -174,7 +174,7 @@
           </div>
 
           <div class="toolbar hidden" id="toolbar-vip">
-            <p class="toolbar__hint">Уровни VIP Club — название, критерий, порог достижения и кэшбэк.</p>
+            <p class="toolbar__hint">Уровни программы лояльности — название, критерий, порог достижения и кэшбэк.</p>
             <button class="btn btn--primary" type="button" id="btn-add-vip-tier">
               <span>+</span> Добавить уровень
             </button>
@@ -314,7 +314,7 @@
               </thead>
               <tbody id="vip-tiers-tbody"></tbody>
             </table>
-            <p class="table-empty hidden" id="vip-tiers-empty">Нет уровней. Добавьте первый уровень VIP Club.</p>
+            <p class="table-empty hidden" id="vip-tiers-empty">Нет уровней. Добавьте первый уровень программы лояльности.</p>
           </div>
 
         </section>
@@ -853,7 +853,7 @@
               </div>
 
               <div class="bonus-type-panel hidden" id="bonus-panel-vip_club_level">
-                <h3 class="bonus-panel__title">VIP Club level</h3>
+                <h3 class="bonus-panel__title">Уровень программы лояльности</h3>
                 <p class="bonus-panel__hint">Укажите название уровня выше — бонус станет доступен для добавления в акцию.</p>
 
                 <div class="bonus-status" id="vip_club_level-bonus-status">
@@ -1086,16 +1086,123 @@
 
             <!-- VIP Club -->
             <div class="section-content hidden" id="section-vip">
-              <h3 class="bonus-panel__title">Программа VIP Club</h3>
-              <p class="bonus-panel__hint">Здесь задаётся, как игрок получает и удерживает уровень. Акции только выдают награды по уже присвоенному уровню.</p>
+              <h3 class="bonus-panel__title">Общие настройки</h3>
+
+              <div class="form-block">
+                <span class="form-label">Срок действия акции</span>
+                <div class="datetime-group">
+                  <span class="datetime-group__label">Начало</span>
+                  <div class="datetime-row">
+                    <input class="form-input" id="vip-promo-start-date" type="text" placeholder="ДД.ММ.ГГГГ" />
+                    <input class="form-input" id="vip-promo-start-time" type="text" placeholder="ЧЧ:ММ:СС" />
+                  </div>
+                </div>
+                <div class="datetime-group">
+                  <span class="datetime-group__label">Конец</span>
+                  <div class="datetime-row">
+                    <input class="form-input" id="vip-promo-end-date" type="text" placeholder="ДД.ММ.ГГГГ" />
+                    <input class="form-input" id="vip-promo-end-time" type="text" placeholder="ЧЧ:ММ:СС" />
+                  </div>
+                </div>
+                <p class="form-hint">Атрибуты старта и конца акции программы лояльности.</p>
+              </div>
 
               <hr class="section-divider" />
 
-              <h3 class="bonus-panel__title">Настройка уровней</h3>
-              <p class="bonus-panel__hint">Для каждого уровня задайте название, критерий (за депозит или за дроп), порог достижения, LVL-up бонус, ежедневный/ежемесячный кэшбэк и шаг начисления наград между уровнями.</p>
-              <div id="vip-progression-editor" class="vip-progression-editor"></div>
+              <h4 class="wagering-subsection__title">Настройки ставок</h4>
+              <p class="bonus-panel__hint">Эти настройки применяются ко всей программе и определяют, какие ставки учитываются в сумме для достижения порога уровня.</p>
 
-              <button class="btn btn--primary btn--full" type="button" id="btn-save-vip-tiers">Сохранить VIP Club</button>
+              <div class="form-block">
+                <label class="form-label" for="vip-bet-minAmount">minAmount</label>
+                <input class="form-input" id="vip-bet-minAmount" type="number" min="0" step="1" placeholder="50" />
+              </div>
+              <div class="form-block">
+                <label class="form-label" for="vip-bet-minOdds">minOdds</label>
+                <input class="form-input" id="vip-bet-minOdds" type="number" min="1" step="0.1" placeholder="1.5" />
+              </div>
+              <div class="form-block">
+                <label class="form-label" for="vip-bet-allowedBetTypes">allowedBetTypes</label>
+                <select class="form-select" id="vip-bet-allowedBetTypes">
+                  <option value="">Не задано</option>
+                  <option value="ordinary">ordinary</option>
+                  <option value="express">express</option>
+                  <option value="all">all</option>
+                </select>
+              </div>
+
+              <hr class="section-divider" />
+
+              <h3 class="bonus-panel__title">Настройки уровня</h3>
+              <p class="bonus-panel__hint">Выберите уровень в таблице слева или создайте новый через «Добавить уровень» — здесь появятся его настройки.</p>
+
+              <div id="vip-progression-editor" class="vip-progression-editor">
+                <div class="table-empty" id="vip-tier-settings-empty">
+                  Уровень не выбран.
+                </div>
+
+                <div class="hidden" id="vip-tier-settings-form">
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-id">ID уровня</label>
+                    <input class="form-input" id="vip-tier-id" type="text" readonly />
+                  </div>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-label">Название</label>
+                    <input class="form-input" id="vip-tier-label" type="text" placeholder="Gold" />
+                  </div>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-thresholdMin">Порог (сумма ставок)</label>
+                    <input class="form-input" id="vip-tier-thresholdMin" type="number" min="0" step="1" placeholder="200000" />
+                  </div>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-lvlUpBonusId">LVL-up бонус</label>
+                    <select class="form-select" id="vip-tier-lvlUpBonusId">
+                      <option value="">Сначала настройте бонус</option>
+                    </select>
+                    <p class="form-hint">Бонус за достижение уровня. Доступны сохранённые бонусы из раздела «Настройка бонуса».</p>
+                  </div>
+
+                  <hr class="section-divider" />
+
+                  <h4 class="wagering-subsection__title">Кэшбэк уровня</h4>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-dailyCashbackPercent">Ежедневный кэшбэк, %</label>
+                    <input class="form-input" id="vip-tier-dailyCashbackPercent" type="number" min="0" max="100" step="0.1" placeholder="0" />
+                  </div>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-monthlyCashbackPercent">Ежемесячный кэшбэк, %</label>
+                    <input class="form-input" id="vip-tier-monthlyCashbackPercent" type="number" min="0" max="100" step="0.1" placeholder="0" />
+                  </div>
+
+                  <hr class="section-divider" />
+
+                  <h4 class="wagering-subsection__title">Награды между уровнями</h4>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-stepRewardDropStep">Шаг дропа ($)</label>
+                    <input class="form-input" id="vip-tier-stepRewardDropStep" type="number" min="1" step="1" placeholder="25000" />
+                    <p class="form-hint">За каждые X$ дропа в сегменте текущего уровня — 1 награда.</p>
+                  </div>
+
+                  <div class="form-block">
+                    <label class="form-label" for="vip-tier-stepRewardBonusId">Шаблон награды</label>
+                    <select class="form-select" id="vip-tier-stepRewardBonusId">
+                      <option value="">Сначала настройте бонус</option>
+                    </select>
+                    <p class="form-hint">Ссылка на сохранённый бонус из раздела «Настройка бонуса».</p>
+                  </div>
+
+                  <button class="btn btn--outline btn--full" type="button" id="btn-remove-vip-tier">
+                    Удалить уровень
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn btn--primary btn--full" type="button" id="btn-save-vip-tiers">Сохранить программу лояльности</button>
             </div>
 
             <!-- Настройка триггера -->

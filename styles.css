@@ -1590,6 +1590,11 @@ body {
   min-width: 0;
 }
 
+.vip-progression-block__threshold {
+  flex: 0 0 240px;
+  min-width: 180px;
+}
+
 .vip-progression-block__fields {
   display: grid;
   grid-template-columns: 1fr 1fr;

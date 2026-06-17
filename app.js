@@ -54,13 +54,33 @@ const vipTiersEmpty = document.getElementById('vip-tiers-empty');
 const btnAddVipTier = document.getElementById('btn-add-vip-tier');
 const btnSaveVipTiers = document.getElementById('btn-save-vip-tiers');
 const vipProgressionEditor = document.getElementById('vip-progression-editor');
+const vipTierSettingsEmpty = document.getElementById('vip-tier-settings-empty');
+const vipTierSettingsForm = document.getElementById('vip-tier-settings-form');
+const vipTierIdInput = document.getElementById('vip-tier-id');
+const vipTierLabelInput = document.getElementById('vip-tier-label');
+const vipTierThresholdMinInput = document.getElementById('vip-tier-thresholdMin');
+const vipTierLvlUpBonusSelect = document.getElementById('vip-tier-lvlUpBonusId');
+const vipTierDailyCashbackInput = document.getElementById('vip-tier-dailyCashbackPercent');
+const vipTierMonthlyCashbackInput = document.getElementById('vip-tier-monthlyCashbackPercent');
+const vipTierStepRewardDropStepInput = document.getElementById('vip-tier-stepRewardDropStep');
+const vipTierStepRewardBonusSelect = document.getElementById('vip-tier-stepRewardBonusId');
+const btnRemoveVipTier = document.getElementById('btn-remove-vip-tier');
 const promoLoyaltyBlock = document.getElementById('promo-loyalty-block');
 const promoLoyaltyProgramSelect = document.getElementById('promo-loyalty-program');
+const vipBetMinAmountInput = document.getElementById('vip-bet-minAmount');
+const vipBetMinOddsInput = document.getElementById('vip-bet-minOdds');
+const vipBetAllowedTypesSelect = document.getElementById('vip-bet-allowedBetTypes');
+const vipPromoStartDateInput = document.getElementById('vip-promo-start-date');
+const vipPromoStartTimeInput = document.getElementById('vip-promo-start-time');
+const vipPromoEndDateInput = document.getElementById('vip-promo-end-date');
+const vipPromoEndTimeInput = document.getElementById('vip-promo-end-time');
 
 let selectedPromoRow = null;
 let selectedBonusRow = null;
 let selectedWageringRow = null;
 let selectedTriggerRow = null;
+let selectedVipTierRow = null;
+let selectedVipTierId = null;
 let editingBonusId = null;
 let editingWageringId = null;
 let editingTriggerId = null;
@@ -199,6 +219,13 @@ const SEED_VIP_PROGRAM = {
   retentionMode: 'revalidate',
   graceDays: 0,
   defaultTierId: 'bronze',
+  startAt: '01.01.26 - 00:00:00',
+  endAt: '31.12.26 - 23:59:59',
+  betSettings: {
+    minAmount: 0,
+    minOdds: 1,
+    allowedBetTypes: 'all',
+  },
 };
 
 const SEED_VIP_TIERS = [
@@ -245,11 +272,10 @@ const SEED_VIP_TIERS = [
 
 const VIP_CRITERION_LABELS = {
   drop: 'За дроп',
-  deposit: 'За депозит',
 };
 
 const VIP_THRESHOLD_LABELS = {
-  drop: 'Порог (сумма тавок)',
+  drop: 'Порог (сумма ставок)',
   deposit: 'Порог (сумма депозитов)',
 };
 
@@ -280,7 +306,7 @@ const BONUS_TYPE_LABELS = {
   bonus_game: 'Бонусная игра',
   cashback: 'Кэшбэк',
   reload: 'Релоад',
-  vip_club_level: 'VIP Club — уровень',
+  vip_club_level: 'Программа лояльности — уровень',
   bonus_pack: 'Пакет бонусов',
   wheel_spin: 'Спин колеса фортуны',
   lootbox: 'Лутбокс',
@@ -1668,6 +1694,11 @@ function clearSelection() {
     selectedTriggerRow.classList.remove('selected');
     selectedTriggerRow = null;
   }
+  if (selectedVipTierRow) {
+    selectedVipTierRow.classList.remove('selected');
+    selectedVipTierRow = null;
+  }
+  selectedVipTierId = null;
 }
 
 function updateEditPanelSections() {
@@ -1939,10 +1970,111 @@ function selectTriggerRow(row) {
   selectedBonusRow = null;
   if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
   selectedWageringRow = null;
+  if (selectedVipTierRow) selectedVipTierRow.classList.remove('selected');
+  selectedVipTierRow = null;
+  selectedVipTierId = null;
   if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
   selectedTriggerRow = row;
   row.classList.add('selected');
   openTriggerPanel({ isNew: false, triggerId: Number(row.dataset.id) });
+}
+
+function getVipTierById(tierId) {
+  if (!tierId) return null;
+  return vipTiers.find((t) => t.id === tierId) || null;
+}
+
+function setVipTierSettingsVisible(visible) {
+  vipTierSettingsEmpty?.classList.toggle('hidden', visible);
+  vipTierSettingsForm?.classList.toggle('hidden', !visible);
+}
+
+function loadVipTierForm(tier) {
+  if (!tier) {
+    setVipTierSettingsVisible(false);
+    return;
+  }
+  setVipTierSettingsVisible(true);
+
+  if (vipTierIdInput) vipTierIdInput.value = tier.id || '';
+  if (vipTierLabelInput) vipTierLabelInput.value = tier.label || '';
+  if (vipTierThresholdMinInput) {
+    vipTierThresholdMinInput.value = String(Number(tier.progression?.thresholdMin ?? 0) || 0);
+  }
+
+  if (vipTierLvlUpBonusSelect) {
+    const selectable = getLvlUpSelectableBonuses();
+    vipTierLvlUpBonusSelect.innerHTML = buildLvlUpBonusSelectOptions(tier.lvlUpBonusId ?? null);
+    vipTierLvlUpBonusSelect.disabled = selectable.length === 0;
+    vipTierLvlUpBonusSelect.value = tier.lvlUpBonusId ? String(tier.lvlUpBonusId) : '';
+  }
+
+  const cashback = normalizeVipCashbackSettings(tier.cashbackSettings);
+  if (vipTierDailyCashbackInput) vipTierDailyCashbackInput.value = String(cashback.dailyPercent ?? 0);
+  if (vipTierMonthlyCashbackInput)
+    vipTierMonthlyCashbackInput.value = String(cashback.monthlyPercent ?? 0);
+
+  const acc = normalizeStepRewardAccrual(tier.stepRewardAccrual || tier.lootboxAccrual);
+  if (vipTierStepRewardDropStepInput) {
+    vipTierStepRewardDropStepInput.value = String(Number(acc.dropStep ?? 0) || 0);
+  }
+  if (vipTierStepRewardBonusSelect) {
+    const selectable = getStepRewardSelectableBonuses();
+    vipTierStepRewardBonusSelect.innerHTML = buildStepRewardBonusSelectOptions(acc.bonusId ?? null);
+    vipTierStepRewardBonusSelect.disabled = selectable.length === 0;
+    vipTierStepRewardBonusSelect.value = acc.bonusId ? String(acc.bonusId) : '';
+  }
+}
+
+function syncVipTierFromForm() {
+  const tier = getVipTierById(selectedVipTierId);
+  if (!tier) return;
+
+  const nextLabel = vipTierLabelInput?.value?.trim() || tier.label || '';
+  const nextThreshold = vipTierThresholdMinInput ? Number(vipTierThresholdMinInput.value) || 0 : 0;
+  const lvlUpRaw = vipTierLvlUpBonusSelect?.value || '';
+  const nextLvlUpBonusId = lvlUpRaw ? Number(lvlUpRaw) : null;
+  const nextCashback = {
+    dailyPercent: vipTierDailyCashbackInput ? Number(vipTierDailyCashbackInput.value) || 0 : 0,
+    monthlyPercent: vipTierMonthlyCashbackInput ? Number(vipTierMonthlyCashbackInput.value) || 0 : 0,
+  };
+  const stepDropStep = vipTierStepRewardDropStepInput
+    ? Number(vipTierStepRewardDropStepInput.value) || 0
+    : 0;
+  const stepBonusRaw = vipTierStepRewardBonusSelect?.value || '';
+  const stepBonusId = stepBonusRaw ? Number(stepBonusRaw) : null;
+
+  tier.label = nextLabel || tier.id;
+  tier.progression = { criterion: 'drop', thresholdMin: Math.max(0, nextThreshold) };
+  tier.lvlUpBonusId = nextLvlUpBonusId;
+  tier.cashbackSettings = normalizeVipCashbackSettings(nextCashback);
+  tier.stepRewardAccrual = normalizeStepRewardAccrual({
+    criterion: 'drop',
+    dropStep: stepDropStep,
+    bonusId: stepBonusId,
+    scope: 'within_tier',
+  });
+
+  renderVipTiersTable();
+}
+
+function selectVipTierRow(row) {
+  if (selectedPromoRow) selectedPromoRow.classList.remove('selected');
+  selectedPromoRow = null;
+  if (selectedBonusRow) selectedBonusRow.classList.remove('selected');
+  selectedBonusRow = null;
+  if (selectedWageringRow) selectedWageringRow.classList.remove('selected');
+  selectedWageringRow = null;
+  if (selectedTriggerRow) selectedTriggerRow.classList.remove('selected');
+  selectedTriggerRow = null;
+
+  if (selectedVipTierRow) selectedVipTierRow.classList.remove('selected');
+  selectedVipTierRow = row;
+  selectedVipTierId = row?.dataset?.id || null;
+  row.classList.add('selected');
+
+  openVipPanel();
+  loadVipTierForm(getVipTierById(selectedVipTierId));
 }
 
 function getSortedVipTiers() {
@@ -1951,8 +2083,9 @@ function getSortedVipTiers() {
 
 function normalizeVipCriterion(criterion) {
   if (criterion === 'bet_turnover') return 'drop';
-  if (criterion === 'deposit_sum') return 'deposit';
-  return criterion === 'deposit' ? 'deposit' : 'drop';
+  // Критерий уровней VIP больше не настраивается в UI.
+  // Нормализуем всё к "drop", чтобы нельзя было сохранить/импортировать "deposit".
+  return 'drop';
 }
 
 function getVipThresholdLabel(criterion) {
@@ -2004,11 +2137,23 @@ function formatVipCashbackSummary(tier) {
 }
 
 function loadVipProgramForm() {
-  // UI-поля программы VIP скрыты; фиксируем пересчёт уровня как "непрерывный".
-  vipProgram = {
-    ...vipProgram,
-    recalculation: 'rolling',
-  };
+  // Часть полей VIP скрыта; фиксируем пересчёт уровня как "непрерывный".
+  vipProgram = { ...vipProgram, recalculation: 'rolling' };
+
+  const start = splitPromoDateTime(vipProgram.startAt);
+  const end = splitPromoDateTime(vipProgram.endAt);
+  if (vipPromoStartDateInput) vipPromoStartDateInput.value = start.date;
+  if (vipPromoStartTimeInput) vipPromoStartTimeInput.value = start.time;
+  if (vipPromoEndDateInput) vipPromoEndDateInput.value = end.date;
+  if (vipPromoEndTimeInput) vipPromoEndTimeInput.value = end.time;
+
+  const bet = vipProgram.betSettings || {};
+  if (vipBetMinAmountInput) vipBetMinAmountInput.value = String(Number(bet.minAmount ?? 0) || 0);
+  if (vipBetMinOddsInput) vipBetMinOddsInput.value = String(Number(bet.minOdds ?? 1) || 1);
+  if (vipBetAllowedTypesSelect) {
+    const allowed = bet.allowedBetTypes || '';
+    vipBetAllowedTypesSelect.value = ['ordinary', 'express', 'all'].includes(allowed) ? allowed : '';
+  }
 }
 
 function defaultStepRewardAccrual() {
@@ -2042,9 +2187,24 @@ function readStepRewardAccrualFromBlock(block) {
 }
 
 function readVipProgramForm() {
+  const betSettings = {
+    minAmount: vipBetMinAmountInput ? Number(vipBetMinAmountInput.value) || 0 : 0,
+    minOdds: vipBetMinOddsInput ? Number(vipBetMinOddsInput.value) || 1 : 1,
+    allowedBetTypes: vipBetAllowedTypesSelect ? vipBetAllowedTypesSelect.value || '' : '',
+  };
+
   return {
     ...vipProgram,
     recalculation: 'rolling',
+    startAt: formatPromoDateTime(
+      vipPromoStartDateInput?.value || '',
+      vipPromoStartTimeInput?.value || ''
+    ),
+    endAt: formatPromoDateTime(
+      vipPromoEndDateInput?.value || '',
+      vipPromoEndTimeInput?.value || ''
+    ),
+    betSettings,
   };
 }
 
@@ -2077,14 +2237,13 @@ function buildStepRewardBonusSelectOptions(selectedId) {
 }
 
 function refreshVipStepRewardBonusSelects() {
-  if (!vipProgressionEditor) return;
   const ready = getStepRewardSelectableBonuses();
-  vipProgressionEditor.querySelectorAll('[data-pf="stepRewardBonusId"]').forEach((select) => {
-    const current = select.value ? Number(select.value) : null;
-    select.innerHTML = buildStepRewardBonusSelectOptions(current);
-    select.disabled = ready.length === 0;
-    if (current) select.value = String(current);
-  });
+  if (vipTierStepRewardBonusSelect) {
+    const current = vipTierStepRewardBonusSelect.value ? Number(vipTierStepRewardBonusSelect.value) : null;
+    vipTierStepRewardBonusSelect.innerHTML = buildStepRewardBonusSelectOptions(current);
+    vipTierStepRewardBonusSelect.disabled = ready.length === 0;
+    if (current) vipTierStepRewardBonusSelect.value = String(current);
+  }
 }
 
 function isVipStepRewardAccrualComplete(acc) {
@@ -2139,9 +2298,7 @@ function readVipTiersFromProgressionEditor() {
       label: block.querySelector('[data-pf="label"]')?.value.trim() || `Tier ${sortOrder}`,
       sortOrder,
       progression: {
-        criterion: normalizeVipCriterion(
-          block.querySelector('[data-pf="criterion"]')?.value || 'drop'
-        ),
+        criterion: normalizeVipCriterion('drop'),
         thresholdMin: Number(block.querySelector('[data-pf="thresholdMin"]')?.value) || 0,
       },
       lvlUpBonusId: lvlUpRaw ? Number(lvlUpRaw) : null,
@@ -2159,12 +2316,6 @@ function renderVipProgressionEditor() {
     .map((tier, index) => {
       const p = tier.progression || defaultProgressionForTier(tier.sortOrder);
       const criterion = normalizeVipCriterion(p.criterion);
-      const opts = Object.entries(VIP_CRITERION_LABELS)
-        .map(
-          ([val, label]) =>
-            `<option value="${val}" ${criterion === val ? 'selected' : ''}>${label}</option>`
-        )
-        .join('');
       const lvlUpOpts = buildLvlUpBonusSelectOptions(tier.lvlUpBonusId ?? null);
       const lvlUpDisabled = getLvlUpSelectableBonuses().length === 0 ? ' disabled' : '';
       const cashbackSettings = normalizeVipCashbackSettings(tier.cashbackSettings);
@@ -2178,17 +2329,13 @@ function renderVipProgressionEditor() {
               <label class="form-label">Название</label>
               <input class="form-input" type="text" data-pf="label" value="${tier.label}" placeholder="Gold" />
             </div>
-            <button class="btn btn--ghost btn--sm vip-tier-remove" type="button" title="Удалить">×</button>
-          </div>
-          <div class="vip-progression-block__fields">
-            <div>
-              <label class="form-label">Критерий</label>
-              <select class="form-select" data-pf="criterion">${opts}</select>
-            </div>
-            <div>
+            <div class="vip-progression-block__threshold">
               <label class="form-label" data-pf="thresholdLabel">${getVipThresholdLabel(criterion)}</label>
               <input class="form-input" type="number" data-pf="thresholdMin" value="${p.thresholdMin ?? 0}" min="0" step="1" />
             </div>
+            <button class="btn btn--ghost btn--sm vip-tier-remove" type="button" title="Удалить">×</button>
+          </div>
+          <div class="vip-progression-block__fields">
             <div class="vip-progression-block__lvl-up">
               <label class="form-label">LVL-up бонус</label>
               <select class="form-select" data-pf="lvlUpBonusId"${lvlUpDisabled}>${lvlUpOpts}</select>
@@ -2255,32 +2402,30 @@ function renderVipProgressionEditor() {
 }
 
 function saveVipTiers() {
-  const tiers = readVipTiersFromProgressionEditor();
-  const incompleteTier = tiers.find((tier) => !isVipStepRewardAccrualComplete(tier.stepRewardAccrual));
-  if (incompleteTier) {
-    return;
-  }
-  vipTiers = tiers;
+  const incompleteTier = vipTiers.find(
+    (tier) => !isVipStepRewardAccrualComplete(tier.stepRewardAccrual || tier.lootboxAccrual)
+  );
+  if (incompleteTier) return;
+
   vipProgram = readVipProgramForm();
   renderVipTiersTable();
-  renderVipProgressionEditor();
   loadVipProgramForm();
+  loadVipTierForm(getVipTierById(selectedVipTierId));
 }
 
 function refreshVipLvlUpBonusSelects() {
-  if (!vipProgressionEditor) return;
   const ready = getLvlUpSelectableBonuses();
-  vipProgressionEditor.querySelectorAll('[data-pf="lvlUpBonusId"]').forEach((select) => {
-    const current = select.value ? Number(select.value) : null;
-    select.innerHTML = buildLvlUpBonusSelectOptions(current);
-    select.disabled = ready.length === 0;
-    if (current) select.value = String(current);
-  });
+  if (vipTierLvlUpBonusSelect) {
+    const current = vipTierLvlUpBonusSelect.value ? Number(vipTierLvlUpBonusSelect.value) : null;
+    vipTierLvlUpBonusSelect.innerHTML = buildLvlUpBonusSelectOptions(current);
+    vipTierLvlUpBonusSelect.disabled = ready.length === 0;
+    if (current) vipTierLvlUpBonusSelect.value = String(current);
+  }
 }
 
 function addVipTierRow() {
   const next = vipTiers.length + 1;
-  vipTiers.push({
+  const tier = {
     id: `tier_${next}`,
     label: `Tier ${next}`,
     sortOrder: next,
@@ -2288,17 +2433,21 @@ function addVipTierRow() {
     lvlUpBonusId: null,
     cashbackSettings: defaultVipCashbackSettings(),
     stepRewardAccrual: defaultStepRewardAccrual(),
-  });
-  renderVipProgressionEditor();
+  };
+  vipTiers.push(tier);
   renderVipTiersTable();
+
+  // Автовыбор только что созданного уровня.
+  const row = vipTiersTbody?.querySelector(`tr[data-id="${tier.id}"]`);
+  if (row) selectVipTierRow(row);
 }
 
 function openVipPanel() {
   panelEmpty.classList.add('hidden');
   panelContent.classList.remove('hidden');
-  panelHeading.textContent = 'VIP Club';
+  panelHeading.textContent = 'Программа лояльности';
   loadVipProgramForm();
-  renderVipProgressionEditor();
+  loadVipTierForm(getVipTierById(selectedVipTierId));
 }
 
 function switchPageSection(section) {
@@ -2325,7 +2474,7 @@ function switchPageSection(section) {
     bonus: 'Бонусы',
     wagering: 'Настройки обкатки',
     trigger: 'Триггеры',
-    vip: 'VIP Club',
+    vip: 'Программа лояльности',
   };
   pageTitle.textContent = titles[section] || 'Акции';
   breadcrumbCurrent.textContent = titles[section] || 'Акции';
@@ -4275,6 +4424,12 @@ triggerTbody?.addEventListener('click', (e) => {
   selectTriggerRow(row);
 });
 
+vipTiersTbody?.addEventListener('click', (e) => {
+  const row = e.target.closest('tr');
+  if (!row || e.target.closest('button')) return;
+  selectVipTierRow(row);
+});
+
 btnAddPromo.addEventListener('click', () => {
   clearSelection();
   switchPageSection('promo');
@@ -4297,6 +4452,40 @@ btnAddTriggerConfig?.addEventListener('click', () => {
   clearSelection();
   switchPageSection('trigger');
   openTriggerPanel({ isNew: true });
+});
+
+vipTierSettingsForm?.addEventListener('input', (e) => {
+  if (!e.target.closest('input, select, textarea')) return;
+  syncVipTierFromForm();
+});
+vipTierSettingsForm?.addEventListener('change', (e) => {
+  if (!e.target.closest('input, select, textarea')) return;
+  syncVipTierFromForm();
+});
+
+btnRemoveVipTier?.addEventListener('click', () => {
+  const tier = getVipTierById(selectedVipTierId);
+  if (!tier) return;
+  const index = vipTiers.findIndex((t) => t.id === tier.id);
+  if (index < 0) return;
+
+  vipTiers.splice(index, 1);
+  renderVipTiersTable();
+
+  // Сохраняем UX: выбираем соседний уровень, иначе показываем заглушку.
+  const remaining = getSortedVipTiers();
+  const fallback = remaining[Math.min(index, Math.max(0, remaining.length - 1))] || null;
+  selectedVipTierId = fallback?.id || null;
+  selectedVipTierRow = null;
+
+  const row = selectedVipTierId ? vipTiersTbody?.querySelector(`tr[data-id="${selectedVipTierId}"]`) : null;
+  if (row) {
+    selectedVipTierRow = row;
+    row.classList.add('selected');
+    loadVipTierForm(getVipTierById(selectedVipTierId));
+  } else {
+    loadVipTierForm(null);
+  }
 });
 
 btnCancel.addEventListener('click', closePanel);
@@ -4580,26 +4769,7 @@ bonusPackSimpleEditor?.addEventListener('click', (e) => {
 bonusPackSimpleEditor?.addEventListener('input', updateBonusUI);
 bonusPackSimpleEditor?.addEventListener('change', updateBonusUI);
 
-vipProgressionEditor?.addEventListener('change', (e) => {
-  const select = e.target.closest('[data-pf="criterion"]');
-  if (!select) return;
-  const block = select.closest('.vip-progression-block');
-  const label = block?.querySelector('[data-pf="thresholdLabel"]');
-  if (label) label.textContent = getVipThresholdLabel(select.value);
-});
-
-vipProgressionEditor?.addEventListener('click', (e) => {
-  if (e.target.closest('.vip-tier-remove')) {
-    const block = e.target.closest('.vip-progression-block');
-    const index = Number(block?.dataset.index);
-    if (!Number.isNaN(index)) {
-      vipTiers = readVipTiersFromProgressionEditor();
-      vipTiers.splice(index, 1);
-      renderVipProgressionEditor();
-      renderVipTiersTable();
-    }
-  }
-});
+// Критерий VIP-уровня больше не меняется в UI.
 
 instanceSwitcher?.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-instance]');
