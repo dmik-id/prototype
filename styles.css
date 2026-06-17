@@ -635,6 +635,15 @@ body {
   margin-bottom: 8px;
 }
 
+.form-static {
+  margin: 0;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
 .form-input,
 .form-select {
   width: 100%;

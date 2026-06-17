@@ -1113,21 +1113,82 @@
               <p class="bonus-panel__hint">Эти настройки применяются ко всей программе и определяют, какие ставки учитываются в сумме для достижения порога уровня.</p>
 
               <div class="form-block">
-                <label class="form-label" for="vip-bet-minAmount">minAmount</label>
-                <input class="form-input" id="vip-bet-minAmount" type="number" min="0" step="1" placeholder="50" />
-              </div>
-              <div class="form-block">
-                <label class="form-label" for="vip-bet-minOdds">minOdds</label>
-                <input class="form-input" id="vip-bet-minOdds" type="number" min="1" step="0.1" placeholder="1.5" />
-              </div>
-              <div class="form-block">
-                <label class="form-label" for="vip-bet-allowedBetTypes">allowedBetTypes</label>
+                <span class="form-label">Тип ставок</span>
                 <select class="form-select" id="vip-bet-allowedBetTypes">
                   <option value="">Не задано</option>
-                  <option value="ordinary">ordinary</option>
-                  <option value="express">express</option>
-                  <option value="all">all</option>
+                  <option value="ordinary">Ординар</option>
+                  <option value="express">Экспресс</option>
+                  <option value="all">Любые</option>
                 </select>
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="vip-bet-minAmount">Минимальная ставка на спорт</label>
+                <input class="form-input" id="vip-bet-minAmount" type="number" min="0" step="1" placeholder="50" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="vip-bet-maxAmount">Максимальная ставка на спорт</label>
+                <input class="form-input" id="vip-bet-maxAmount" type="number" min="0" step="1" placeholder="Не задано" />
+              </div>
+
+              <div class="form-block">
+                <label class="form-label" for="vip-bet-minOdds">Минимальный коэффициент (спорт)</label>
+                <input class="form-input" id="vip-bet-minOdds" type="number" min="1" step="0.1" placeholder="1.5" />
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Мультипликатор учёта ставок</span>
+                <p class="form-hint">С каким коэффициентом сумма ставки засчитывается в прогресс уровня.</p>
+
+                <div class="vip-betsum-row">
+                  <span class="vip-betsum-row__left">Ставки на ординар</span>
+                  <div class="vip-betsum-row__right">
+                    <span class="vip-betsum-row__label">×</span>
+                    <input class="form-input vip-bet-multiplier" id="vip-bet-multiplier-ordinary" type="number" min="0" step="0.01" data-vip-multiplier="ordinary" placeholder="1" />
+                  </div>
+                </div>
+
+                <div class="vip-betsum-row">
+                  <span class="vip-betsum-row__left">Ставки на экспресс</span>
+                  <div class="vip-betsum-row__right">
+                    <span class="vip-betsum-row__label">×</span>
+                    <input class="form-input vip-bet-multiplier" id="vip-bet-multiplier-express" type="number" min="0" step="0.01" data-vip-multiplier="express" placeholder="1" />
+                  </div>
+                </div>
+
+                <div class="vip-betsum-row">
+                  <span class="vip-betsum-row__left">Ставки на краш</span>
+                  <div class="vip-betsum-row__right">
+                    <span class="vip-betsum-row__label">×</span>
+                    <input class="form-input vip-bet-multiplier" id="vip-bet-multiplier-crash" type="number" min="0" step="0.01" data-vip-multiplier="crash" placeholder="1" />
+                  </div>
+                </div>
+
+                <div class="vip-betsum-row">
+                  <span class="vip-betsum-row__left">Ставки на слот</span>
+                  <div class="vip-betsum-row__right">
+                    <span class="vip-betsum-row__label">×</span>
+                    <input class="form-input vip-bet-multiplier" id="vip-bet-multiplier-slot" type="number" min="0" step="0.01" data-vip-multiplier="slot" placeholder="1" />
+                  </div>
+                </div>
+
+                <div class="vip-betsum-row">
+                  <span class="vip-betsum-row__left">Ставки на казино лайв</span>
+                  <div class="vip-betsum-row__right">
+                    <span class="vip-betsum-row__label">×</span>
+                    <input class="form-input vip-bet-multiplier" id="vip-bet-multiplier-casinoLive" type="number" min="0" step="0.01" data-vip-multiplier="casinoLive" placeholder="1" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <span class="form-label">Тип игр казино</span>
+                <div class="checkbox-group" data-vip-checkbox="casinoGameTypes">
+                  <label class="checkbox-group__item"><input type="checkbox" value="slot" checked /> Слоты</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="crash" checked /> Краш</label>
+                  <label class="checkbox-group__item"><input type="checkbox" value="casino_live" checked /> Казино лайв</label>
+                </div>
               </div>
 
               <hr class="section-divider" />
@@ -1142,8 +1203,8 @@
 
                 <div class="hidden" id="vip-tier-settings-form">
                   <div class="form-block">
-                    <label class="form-label" for="vip-tier-id">ID уровня</label>
-                    <input class="form-input" id="vip-tier-id" type="text" readonly />
+                    <span class="form-label">ID уровня</span>
+                    <p class="form-static" id="vip-tier-id">—</p>
                   </div>
 
                   <div class="form-block">

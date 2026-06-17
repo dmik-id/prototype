@@ -56,7 +56,7 @@ const btnSaveVipTiers = document.getElementById('btn-save-vip-tiers');
 const vipProgressionEditor = document.getElementById('vip-progression-editor');
 const vipTierSettingsEmpty = document.getElementById('vip-tier-settings-empty');
 const vipTierSettingsForm = document.getElementById('vip-tier-settings-form');
-const vipTierIdInput = document.getElementById('vip-tier-id');
+const vipTierIdDisplay = document.getElementById('vip-tier-id');
 const vipTierLabelInput = document.getElementById('vip-tier-label');
 const vipTierThresholdMinInput = document.getElementById('vip-tier-thresholdMin');
 const vipTierLvlUpBonusSelect = document.getElementById('vip-tier-lvlUpBonusId');
@@ -68,8 +68,11 @@ const btnRemoveVipTier = document.getElementById('btn-remove-vip-tier');
 const promoLoyaltyBlock = document.getElementById('promo-loyalty-block');
 const promoLoyaltyProgramSelect = document.getElementById('promo-loyalty-program');
 const vipBetMinAmountInput = document.getElementById('vip-bet-minAmount');
+const vipBetMaxAmountInput = document.getElementById('vip-bet-maxAmount');
 const vipBetMinOddsInput = document.getElementById('vip-bet-minOdds');
 const vipBetAllowedTypesSelect = document.getElementById('vip-bet-allowedBetTypes');
+const VIP_BET_MULTIPLIER_KEYS = ['ordinary', 'express', 'crash', 'slot', 'casinoLive'];
+const VIP_CASINO_GAME_TYPE_OPTIONS = ['slot', 'crash', 'casino_live'];
 const vipPromoStartDateInput = document.getElementById('vip-promo-start-date');
 const vipPromoStartTimeInput = document.getElementById('vip-promo-start-time');
 const vipPromoEndDateInput = document.getElementById('vip-promo-end-date');
@@ -218,19 +221,28 @@ const SEED_VIP_PROGRAM = {
   recalculation: 'end_of_period',
   retentionMode: 'revalidate',
   graceDays: 0,
-  defaultTierId: 'bronze',
+  defaultTierId: 1,
   startAt: '01.01.26 - 00:00:00',
   endAt: '31.12.26 - 23:59:59',
   betSettings: {
-    minAmount: 0,
-    minOdds: 1,
+    minAmount: 50,
+    maxAmount: null,
+    minOdds: 1.5,
     allowedBetTypes: 'all',
+    betMultipliers: {
+      ordinary: 1,
+      express: 1,
+      crash: 1,
+      slot: 1,
+      casinoLive: 1,
+    },
+    casinoGameTypes: ['slot', 'crash', 'casino_live'],
   },
 };
 
 const SEED_VIP_TIERS = [
   {
-    id: 'bronze',
+    id: 1,
     label: 'Bronze',
     sortOrder: 1,
     progression: { criterion: 'drop', thresholdMin: 0 },
@@ -243,7 +255,7 @@ const SEED_VIP_TIERS = [
     },
   },
   {
-    id: 'silver',
+    id: 2,
     label: 'Silver',
     sortOrder: 2,
     progression: { criterion: 'drop', thresholdMin: 50000 },
@@ -256,7 +268,7 @@ const SEED_VIP_TIERS = [
     },
   },
   {
-    id: 'gold',
+    id: 3,
     label: 'Gold',
     sortOrder: 3,
     progression: { criterion: 'drop', thresholdMin: 200000 },
@@ -1122,7 +1134,7 @@ const SEED_BONUSES_ST = [
 
 const SEED_VIP_TIERS_KZ = [
   {
-    id: 'bronze',
+    id: 1,
     label: 'KZ Bronze',
     sortOrder: 1,
     progression: { criterion: 'deposit', thresholdMin: 0 },
@@ -1130,7 +1142,7 @@ const SEED_VIP_TIERS_KZ = [
     stepRewardAccrual: { criterion: 'deposit', dropStep: 10000, bonusId: 2, scope: 'within_tier' },
   },
   {
-    id: 'silver',
+    id: 2,
     label: 'KZ Silver',
     sortOrder: 2,
     progression: { criterion: 'deposit', thresholdMin: 100000 },
@@ -1141,7 +1153,7 @@ const SEED_VIP_TIERS_KZ = [
 
 const SEED_VIP_TIERS_ST = [
   {
-    id: 'rookie',
+    id: 1,
     label: 'Rookie',
     sortOrder: 1,
     progression: { criterion: 'drop', thresholdMin: 0 },
@@ -1149,7 +1161,7 @@ const SEED_VIP_TIERS_ST = [
     stepRewardAccrual: { criterion: 'drop', dropStep: 10000, bonusId: 3, scope: 'within_tier' },
   },
   {
-    id: 'pro',
+    id: 2,
     label: 'Pro',
     sortOrder: 2,
     progression: { criterion: 'drop', thresholdMin: 100000 },
@@ -1157,7 +1169,7 @@ const SEED_VIP_TIERS_ST = [
     stepRewardAccrual: { criterion: 'drop', dropStep: 50000, bonusId: 4, scope: 'within_tier' },
   },
   {
-    id: 'legend',
+    id: 3,
     label: 'Legend',
     sortOrder: 3,
     progression: { criterion: 'drop', thresholdMin: 500000 },
@@ -1196,6 +1208,7 @@ function clonePromotionsList(list) {
 function cloneVipTiersList(list) {
   return list.map((t) => ({
     ...t,
+    id: normalizeVipTierId(t.id) ?? t.id,
     progression: { ...t.progression },
     cashbackSettings: normalizeVipCashbackSettings(t.cashbackSettings),
     stepRewardAccrual: normalizeStepRewardAccrual(t.stepRewardAccrual || t.lootboxAccrual),
@@ -1237,7 +1250,7 @@ function buildInstanceSeed(instanceId) {
       bonuses: SEED_BONUSES_ST,
       triggers: SEED_TRIGGERS_ST,
       wagerings: SEED_WAGERINGS,
-      vipProgram: { ...SEED_VIP_PROGRAM, id: 'vip_club_st', defaultTierId: 'rookie' },
+      vipProgram: { ...SEED_VIP_PROGRAM, id: 'vip_club_st', defaultTierId: 1 },
       vipTiers: SEED_VIP_TIERS_ST,
     },
   };
@@ -1979,9 +1992,16 @@ function selectTriggerRow(row) {
   openTriggerPanel({ isNew: false, triggerId: Number(row.dataset.id) });
 }
 
+function normalizeVipTierId(id) {
+  if (id == null || id === '') return null;
+  const numeric = Number(id);
+  return Number.isFinite(numeric) ? numeric : id;
+}
+
 function getVipTierById(tierId) {
-  if (!tierId) return null;
-  return vipTiers.find((t) => t.id === tierId) || null;
+  const normalized = normalizeVipTierId(tierId);
+  if (normalized == null) return null;
+  return vipTiers.find((t) => t.id === normalized) || null;
 }
 
 function setVipTierSettingsVisible(visible) {
@@ -1991,12 +2011,13 @@ function setVipTierSettingsVisible(visible) {
 
 function loadVipTierForm(tier) {
   if (!tier) {
+    if (vipTierIdDisplay) vipTierIdDisplay.textContent = '—';
     setVipTierSettingsVisible(false);
     return;
   }
   setVipTierSettingsVisible(true);
 
-  if (vipTierIdInput) vipTierIdInput.value = tier.id || '';
+  if (vipTierIdDisplay) vipTierIdDisplay.textContent = String(tier.id ?? '—');
   if (vipTierLabelInput) vipTierLabelInput.value = tier.label || '';
   if (vipTierThresholdMinInput) {
     vipTierThresholdMinInput.value = String(Number(tier.progression?.thresholdMin ?? 0) || 0);
@@ -2044,7 +2065,7 @@ function syncVipTierFromForm() {
   const stepBonusRaw = vipTierStepRewardBonusSelect?.value || '';
   const stepBonusId = stepBonusRaw ? Number(stepBonusRaw) : null;
 
-  tier.label = nextLabel || tier.id;
+  tier.label = nextLabel || String(tier.id);
   tier.progression = { criterion: 'drop', thresholdMin: Math.max(0, nextThreshold) };
   tier.lvlUpBonusId = nextLvlUpBonusId;
   tier.cashbackSettings = normalizeVipCashbackSettings(nextCashback);
@@ -2070,7 +2091,7 @@ function selectVipTierRow(row) {
 
   if (selectedVipTierRow) selectedVipTierRow.classList.remove('selected');
   selectedVipTierRow = row;
-  selectedVipTierId = row?.dataset?.id || null;
+  selectedVipTierId = row?.dataset?.id != null ? normalizeVipTierId(row.dataset.id) : null;
   row.classList.add('selected');
 
   openVipPanel();
@@ -2147,13 +2168,90 @@ function loadVipProgramForm() {
   if (vipPromoEndDateInput) vipPromoEndDateInput.value = end.date;
   if (vipPromoEndTimeInput) vipPromoEndTimeInput.value = end.time;
 
-  const bet = vipProgram.betSettings || {};
-  if (vipBetMinAmountInput) vipBetMinAmountInput.value = String(Number(bet.minAmount ?? 0) || 0);
-  if (vipBetMinOddsInput) vipBetMinOddsInput.value = String(Number(bet.minOdds ?? 1) || 1);
+  const bet = normalizeVipBetSettings(vipProgram.betSettings);
+  if (vipBetMinAmountInput) vipBetMinAmountInput.value = String(bet.minAmount);
+  if (vipBetMaxAmountInput) {
+    vipBetMaxAmountInput.value = bet.maxAmount == null ? '' : String(bet.maxAmount);
+  }
+  if (vipBetMinOddsInput) vipBetMinOddsInput.value = String(bet.minOdds);
   if (vipBetAllowedTypesSelect) {
     const allowed = bet.allowedBetTypes || '';
     vipBetAllowedTypesSelect.value = ['ordinary', 'express', 'all'].includes(allowed) ? allowed : '';
   }
+  VIP_BET_MULTIPLIER_KEYS.forEach((key) => {
+    const input = sectionVip?.querySelector(`[data-vip-multiplier="${key}"]`);
+    if (input) input.value = String(bet.betMultipliers[key] ?? 1);
+  });
+  setVipCheckboxGroup('casinoGameTypes', bet.casinoGameTypes);
+}
+
+function defaultVipBetSettings() {
+  return {
+    minAmount: 50,
+    maxAmount: null,
+    minOdds: 1.5,
+    allowedBetTypes: 'all',
+    betMultipliers: {
+      ordinary: 1,
+      express: 1,
+      crash: 1,
+      slot: 1,
+      casinoLive: 1,
+    },
+    casinoGameTypes: [...VIP_CASINO_GAME_TYPE_OPTIONS],
+  };
+}
+
+function normalizeVipBetSettings(settings) {
+  const defaults = defaultVipBetSettings();
+  if (!settings) return defaults;
+  const multipliers = { ...defaults.betMultipliers, ...(settings.betMultipliers || {}) };
+  VIP_BET_MULTIPLIER_KEYS.forEach((key) => {
+    multipliers[key] = Number(multipliers[key]);
+    if (!Number.isFinite(multipliers[key]) || multipliers[key] < 0) multipliers[key] = 1;
+  });
+  const casinoGameTypes = Array.isArray(settings.casinoGameTypes)
+    ? settings.casinoGameTypes.filter((v) => VIP_CASINO_GAME_TYPE_OPTIONS.includes(v))
+    : defaults.casinoGameTypes;
+  const maxRaw = settings.maxAmount;
+  const maxAmount = maxRaw == null || maxRaw === '' ? null : Number(maxRaw);
+  return {
+    minAmount: Number(settings.minAmount ?? defaults.minAmount) || 0,
+    maxAmount: maxAmount != null && Number.isFinite(maxAmount) ? maxAmount : null,
+    minOdds: Number(settings.minOdds ?? defaults.minOdds) || 1,
+    allowedBetTypes: ['ordinary', 'express', 'all'].includes(settings.allowedBetTypes)
+      ? settings.allowedBetTypes
+      : defaults.allowedBetTypes,
+    betMultipliers: multipliers,
+    casinoGameTypes: casinoGameTypes.length ? casinoGameTypes : [...defaults.casinoGameTypes],
+  };
+}
+
+function readVipCheckboxGroup(field) {
+  const group = sectionVip?.querySelector(`[data-vip-checkbox="${field}"]`);
+  if (!group) return [];
+  return [...group.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)')].map(
+    (input) => input.value
+  );
+}
+
+function setVipCheckboxGroup(field, values = []) {
+  const group = sectionVip?.querySelector(`[data-vip-checkbox="${field}"]`);
+  if (!group) return;
+  const normalized = Array.isArray(values) ? values : [];
+  group.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach((input) => {
+    input.checked = normalized.includes(input.value);
+  });
+}
+
+function readVipBetMultipliersFromForm() {
+  const multipliers = {};
+  VIP_BET_MULTIPLIER_KEYS.forEach((key) => {
+    const input = sectionVip?.querySelector(`[data-vip-multiplier="${key}"]`);
+    const value = Number(input?.value);
+    multipliers[key] = Number.isFinite(value) && value >= 0 ? value : 1;
+  });
+  return multipliers;
 }
 
 function defaultStepRewardAccrual() {
@@ -2187,11 +2285,15 @@ function readStepRewardAccrualFromBlock(block) {
 }
 
 function readVipProgramForm() {
-  const betSettings = {
+  const maxRaw = vipBetMaxAmountInput?.value?.trim();
+  const betSettings = normalizeVipBetSettings({
     minAmount: vipBetMinAmountInput ? Number(vipBetMinAmountInput.value) || 0 : 0,
+    maxAmount: maxRaw ? Number(maxRaw) : null,
     minOdds: vipBetMinOddsInput ? Number(vipBetMinOddsInput.value) || 1 : 1,
     allowedBetTypes: vipBetAllowedTypesSelect ? vipBetAllowedTypesSelect.value || '' : '',
-  };
+    betMultipliers: readVipBetMultipliersFromForm(),
+    casinoGameTypes: readVipCheckboxGroup('casinoGameTypes'),
+  });
 
   return {
     ...vipProgram,
@@ -2267,7 +2369,7 @@ function renderVipTiersTable() {
 
   tiers.forEach((tier) => {
     const tr = document.createElement('tr');
-    tr.dataset.id = tier.id;
+    tr.dataset.id = String(tier.id);
     const p = tier.progression;
     const critLabel = p
       ? VIP_CRITERION_LABELS[normalizeVipCriterion(p.criterion)] || p.criterion
@@ -2275,7 +2377,7 @@ function renderVipTiersTable() {
     const threshold =
       p?.thresholdMin != null ? p.thresholdMin.toLocaleString('ru-RU') : '—';
     tr.innerHTML = `
-      <td><code>${tier.id}</code></td>
+      <td>${tier.id}</td>
       <td>${tier.label}</td>
       <td>${critLabel}</td>
       <td>${threshold}</td>
@@ -2290,7 +2392,7 @@ function renderVipTiersTable() {
 function readVipTiersFromProgressionEditor() {
   if (!vipProgressionEditor) return [];
   return [...vipProgressionEditor.querySelectorAll('.vip-progression-block')].map((block, index) => {
-    const id = block.dataset.tierId || `tier_${index + 1}`;
+    const id = normalizeVipTierId(block.dataset.tierId) ?? index + 1;
     const sortOrder = index + 1;
     const lvlUpRaw = block.querySelector('[data-pf="lvlUpBonusId"]')?.value;
     return {
@@ -2426,7 +2528,7 @@ function refreshVipLvlUpBonusSelects() {
 function addVipTierRow() {
   const next = vipTiers.length + 1;
   const tier = {
-    id: `tier_${next}`,
+    id: nextIdFromList(vipTiers),
     label: `Tier ${next}`,
     sortOrder: next,
     progression: defaultProgressionForTier(next),
