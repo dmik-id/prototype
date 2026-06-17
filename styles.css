@@ -1696,6 +1696,7 @@ body {
   border-color: #dc3545;
 }
 
+.vip-progression-block__cashback,
 .vip-progression-block__step-reward {
   grid-column: 1 / -1;
   margin-top: 4px;
@@ -1703,6 +1704,7 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.vip-progression-block__cashback-title,
 .vip-progression-block__step-reward-title {
   margin: 0 0 10px;
   font-size: 13px;
@@ -1710,6 +1712,7 @@ body {
   color: var(--text);
 }
 
+.vip-progression-block__cashback-fields,
 .vip-progression-block__step-reward-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;

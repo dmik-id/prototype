@@ -1171,6 +1171,7 @@ function cloneVipTiersList(list) {
   return list.map((t) => ({
     ...t,
     progression: { ...t.progression },
+    cashbackSettings: normalizeVipCashbackSettings(t.cashbackSettings),
     stepRewardAccrual: normalizeStepRewardAccrual(t.stepRewardAccrual || t.lootboxAccrual),
   }));
 }
@@ -1975,6 +1976,33 @@ function formatProgressionSummary(tier) {
   return `${crit}: от ${threshold}`;
 }
 
+function defaultVipCashbackSettings() {
+  return {
+    dailyPercent: 0,
+    monthlyPercent: 0,
+  };
+}
+
+function normalizeVipCashbackSettings(settings) {
+  if (!settings) return defaultVipCashbackSettings();
+  return {
+    dailyPercent: Number(settings.dailyPercent) || 0,
+    monthlyPercent: Number(settings.monthlyPercent) || 0,
+  };
+}
+
+function readVipCashbackSettingsFromBlock(block) {
+  return {
+    dailyPercent: Number(block.querySelector('[data-pf="dailyCashbackPercent"]')?.value) || 0,
+    monthlyPercent: Number(block.querySelector('[data-pf="monthlyCashbackPercent"]')?.value) || 0,
+  };
+}
+
+function formatVipCashbackSummary(tier) {
+  const settings = normalizeVipCashbackSettings(tier.cashbackSettings);
+  return `День: ${settings.dailyPercent}% / Месяц: ${settings.monthlyPercent}%`;
+}
+
 function loadVipProgramForm() {
   // UI-поля программы VIP скрыты; фиксируем пересчёт уровня как "непрерывный".
   vipProgram = {
@@ -2093,6 +2121,7 @@ function renderVipTiersTable() {
       <td>${critLabel}</td>
       <td>${threshold}</td>
       <td>${formatLvlUpBonusSummary(tier.lvlUpBonusId)}</td>
+      <td>${formatVipCashbackSummary(tier)}</td>
       <td><button class="icon-btn icon-btn--sm" type="button" title="Редактировать">✎</button></td>
     `;
     vipTiersTbody.appendChild(tr);
@@ -2116,6 +2145,7 @@ function readVipTiersFromProgressionEditor() {
         thresholdMin: Number(block.querySelector('[data-pf="thresholdMin"]')?.value) || 0,
       },
       lvlUpBonusId: lvlUpRaw ? Number(lvlUpRaw) : null,
+      cashbackSettings: readVipCashbackSettingsFromBlock(block),
       stepRewardAccrual: readStepRewardAccrualFromBlock(block),
     };
   });
@@ -2137,6 +2167,7 @@ function renderVipProgressionEditor() {
         .join('');
       const lvlUpOpts = buildLvlUpBonusSelectOptions(tier.lvlUpBonusId ?? null);
       const lvlUpDisabled = getLvlUpSelectableBonuses().length === 0 ? ' disabled' : '';
+      const cashbackSettings = normalizeVipCashbackSettings(tier.cashbackSettings);
       const acc = normalizeStepRewardAccrual(tier.stepRewardAccrual || tier.lootboxAccrual);
       const stepRewardOpts = buildStepRewardBonusSelectOptions(acc.bonusId ?? null);
       const stepRewardDisabled = getStepRewardSelectableBonuses().length === 0 ? ' disabled' : '';
@@ -2162,6 +2193,37 @@ function renderVipProgressionEditor() {
               <label class="form-label">LVL-up бонус</label>
               <select class="form-select" data-pf="lvlUpBonusId"${lvlUpDisabled}>${lvlUpOpts}</select>
               <p class="form-hint vip-progression-block__lvl-up-hint">Бонус за достижение уровня. Доступны сохранённые бонусы из раздела «Настройка бонуса».</p>
+            </div>
+            <div class="vip-progression-block__cashback">
+              <p class="vip-progression-block__cashback-title">Кэшбэк уровня</p>
+              <div class="vip-progression-block__cashback-fields">
+                <div>
+                  <label class="form-label">Ежедневный кэшбэк, %</label>
+                  <input
+                    class="form-input"
+                    type="number"
+                    data-pf="dailyCashbackPercent"
+                    value="${cashbackSettings.dailyPercent}"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label class="form-label">Ежемесячный кэшбэк, %</label>
+                  <input
+                    class="form-input"
+                    type="number"
+                    data-pf="monthlyCashbackPercent"
+                    value="${cashbackSettings.monthlyPercent}"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
             </div>
             <div class="vip-progression-block__step-reward">
               <p class="vip-progression-block__step-reward-title">Награды между уровнями</p>
@@ -2224,6 +2286,7 @@ function addVipTierRow() {
     sortOrder: next,
     progression: defaultProgressionForTier(next),
     lvlUpBonusId: null,
+    cashbackSettings: defaultVipCashbackSettings(),
     stepRewardAccrual: defaultStepRewardAccrual(),
   });
   renderVipProgressionEditor();
