@@ -52,7 +52,10 @@ const searchWageringInput = document.getElementById('search-wagering');
 const vipTiersTbody = document.getElementById('vip-tiers-tbody');
 const vipTiersEmpty = document.getElementById('vip-tiers-empty');
 const btnAddVipTier = document.getElementById('btn-add-vip-tier');
+const btnVipGeneralSettings = document.getElementById('btn-vip-general-settings');
 const btnSaveVipTiers = document.getElementById('btn-save-vip-tiers');
+const vipPanelGeneral = document.getElementById('vip-panel-general');
+const vipPanelTier = document.getElementById('vip-panel-tier');
 const vipProgressionEditor = document.getElementById('vip-progression-editor');
 const vipTierSettingsEmpty = document.getElementById('vip-tier-settings-empty');
 const vipTierSettingsForm = document.getElementById('vip-tier-settings-form');
@@ -84,6 +87,7 @@ let selectedWageringRow = null;
 let selectedTriggerRow = null;
 let selectedVipTierRow = null;
 let selectedVipTierId = null;
+let vipPanelMode = null;
 let editingBonusId = null;
 let editingWageringId = null;
 let editingTriggerId = null;
@@ -1712,6 +1716,7 @@ function clearSelection() {
     selectedVipTierRow = null;
   }
   selectedVipTierId = null;
+  vipPanelMode = null;
 }
 
 function updateEditPanelSections() {
@@ -1925,6 +1930,10 @@ function closePanel() {
   setPromoTriggerPickerVisible(true);
   panelEmpty.classList.remove('hidden');
   panelContent.classList.add('hidden');
+  vipPanelMode = null;
+  vipPanelGeneral?.classList.add('hidden');
+  vipPanelTier?.classList.add('hidden');
+  btnSaveVipTiers?.classList.add('hidden');
   clearSelection();
   editingBonusId = null;
   editingWageringId = null;
@@ -2094,8 +2103,7 @@ function selectVipTierRow(row) {
   selectedVipTierId = row?.dataset?.id != null ? normalizeVipTierId(row.dataset.id) : null;
   row.classList.add('selected');
 
-  openVipPanel();
-  loadVipTierForm(getVipTierById(selectedVipTierId));
+  openVipPanel('tier');
 }
 
 function getSortedVipTiers() {
@@ -2511,8 +2519,7 @@ function saveVipTiers() {
 
   vipProgram = readVipProgramForm();
   renderVipTiersTable();
-  loadVipProgramForm();
-  loadVipTierForm(getVipTierById(selectedVipTierId));
+  if (vipPanelMode) setVipPanelView(vipPanelMode);
 }
 
 function refreshVipLvlUpBonusSelects() {
@@ -2544,12 +2551,39 @@ function addVipTierRow() {
   if (row) selectVipTierRow(row);
 }
 
-function openVipPanel() {
+function setVipPanelView(mode) {
+  vipPanelMode = mode;
+  const showGeneral = mode === 'general';
+  const showTier = mode === 'tier';
+  vipPanelGeneral?.classList.toggle('hidden', !showGeneral);
+  vipPanelTier?.classList.toggle('hidden', !showTier);
+  btnSaveVipTiers?.classList.toggle('hidden', !mode);
+
+  if (showGeneral) {
+    panelHeading.textContent = 'Общие настройки';
+    loadVipProgramForm();
+  } else if (showTier) {
+    panelHeading.textContent = 'Настройки уровня';
+    loadVipTierForm(getVipTierById(selectedVipTierId));
+  }
+}
+
+function openVipGeneralSettings() {
+  if (selectedVipTierRow) {
+    selectedVipTierRow.classList.remove('selected');
+    selectedVipTierRow = null;
+    selectedVipTierId = null;
+  }
+
   panelEmpty.classList.add('hidden');
   panelContent.classList.remove('hidden');
-  panelHeading.textContent = 'Программа лояльности';
-  loadVipProgramForm();
-  loadVipTierForm(getVipTierById(selectedVipTierId));
+  setVipPanelView('general');
+}
+
+function openVipPanel(mode = vipPanelMode) {
+  panelEmpty.classList.add('hidden');
+  panelContent.classList.remove('hidden');
+  if (mode) setVipPanelView(mode);
 }
 
 function switchPageSection(section) {
@@ -2658,7 +2692,9 @@ function switchPageSection(section) {
   if (isTrigger) renderTriggersTable();
   if (isVip) {
     renderVipTiersTable();
-    openVipPanel();
+    vipPanelMode = null;
+    panelEmpty.classList.remove('hidden');
+    panelContent.classList.add('hidden');
     return;
   }
 
@@ -4584,10 +4620,8 @@ btnRemoveVipTier?.addEventListener('click', () => {
   if (row) {
     selectedVipTierRow = row;
     row.classList.add('selected');
-    loadVipTierForm(getVipTierById(selectedVipTierId));
-  } else {
-    loadVipTierForm(null);
   }
+  openVipPanel('tier');
 });
 
 btnCancel.addEventListener('click', closePanel);
@@ -4796,6 +4830,7 @@ btnSaveWagering?.addEventListener('click', saveWagering);
 searchWageringInput?.addEventListener('input', renderWageringsTable);
 
 btnAddVipTier?.addEventListener('click', addVipTierRow);
+btnVipGeneralSettings?.addEventListener('click', openVipGeneralSettings);
 btnSaveVipTiers?.addEventListener('click', saveVipTiers);
 
 function bindBonusPoolEditorEvents(editorEl, renderPool) {

@@ -175,6 +175,7 @@
 
           <div class="toolbar hidden" id="toolbar-vip">
             <p class="toolbar__hint">Уровни программы лояльности — название, критерий, порог достижения и кэшбэк.</p>
+            <button class="btn btn--secondary" type="button" id="btn-vip-general-settings">Общие настройки</button>
             <button class="btn btn--primary" type="button" id="btn-add-vip-tier">
               <span>+</span> Добавить уровень
             </button>
@@ -1086,6 +1087,7 @@
 
             <!-- VIP Club -->
             <div class="section-content hidden" id="section-vip">
+              <div id="vip-panel-general" class="hidden">
               <h3 class="bonus-panel__title">Общие настройки</h3>
 
               <div class="form-block">
@@ -1190,9 +1192,9 @@
                   <label class="checkbox-group__item"><input type="checkbox" value="casino_live" checked /> Казино лайв</label>
                 </div>
               </div>
+              </div>
 
-              <hr class="section-divider" />
-
+              <div id="vip-panel-tier" class="hidden">
               <h3 class="bonus-panel__title">Настройки уровня</h3>
               <p class="bonus-panel__hint">Выберите уровень в таблице слева или создайте новый через «Добавить уровень» — здесь появятся его настройки.</p>
 
@@ -1262,8 +1264,9 @@
                   </button>
                 </div>
               </div>
+              </div>
 
-              <button class="btn btn--primary btn--full" type="button" id="btn-save-vip-tiers">Сохранить программу лояльности</button>
+              <button class="btn btn--primary btn--full hidden" type="button" id="btn-save-vip-tiers">Сохранить программу лояльности</button>
             </div>
 
             <!-- Настройка триггера -->
